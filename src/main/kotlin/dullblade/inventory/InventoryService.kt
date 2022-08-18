@@ -5,7 +5,9 @@ import dullblade.Material
 import dullblade.Weapon
 import dullblade.game.ActionReason
 import dullblade.game.MaterialType
+import dullblade.game.WatcherTriggerType
 import dullblade.inventory.InventoryMessages.*
+import dullblade.queue.BattlePassService
 
 object InventoryService {
     fun lock(session: GameSession, req: SetEquipLockStateReq/*targetEquipGuid: Long, isLocked: Boolean*/) {
@@ -158,15 +160,16 @@ object InventoryService {
         relic.appendPropIdList.add(affix.Id)
     }
 
-    fun pay(session: GameSession, costItems: List<CostItem>, coinCost: Int) {
+    fun pay(session: GameSession, costItems: List<CostItem>, coinCost: Int = 0, count: Int = 1) {
         val inv = session.account.inventory
-        if (costItems.any { inv.materials[it.id]!!.count < it.count } || coinCost > inv.mora)
+        if (costItems.any { inv.materials[it.id]!!.count < it.count * count } || coinCost > inv.mora)
             throw IllegalArgumentException("Can't pay cost items")
         inv.mora -= coinCost
         for (cost in costItems) {
             val material = inv.materials[cost.id]!!
-// player.battlePassManager!!.triggerMission(WatcherTriggerType.TRIGGER_COST_MATERIAL, item.itemId, count.coerceAtMost(item.count))
-            material.count -= cost.count
+            BattlePassService.trigger(WatcherTriggerType.TRIGGER_COST_MATERIAL,
+                cost.id, cost.count * count)
+            material.count -= cost.count * count
             if (material.count > 0) {
                 session.send(PacketStoreItemChangeNotify(material))
             } else {
@@ -213,11 +216,22 @@ object InventoryService {
             session.account.unlockedCombines.add(combineId)
             session.send(PacketCombineFormulaDataNotify(combineId))
             useSuccess = true
-        } else if (data?.type == MaterialType.MATERIAL_FURNITURE_FORMULA
-            || data?.type == MaterialType.MATERIAL_FURNITURE_SUITE_FORMULA) {
-            useSuccess = FurnitureService.unlock(material)
+        } else if (data?.type == MaterialType.MATERIAL_FURNITURE_FORMULA) {
+            val fId = data.itemUse[0].params[0].toInt()
+            session.account.inventory.materials.remove(material.id)
+            session.send(PacketStoreItemDelNotify(material.guid))
+            session.account.unlockedFurniture.add(fId)
+            session.send(PacketUnlockedFurnitureFormulaDataNotify(session.account.unlockedFurniture))
+            useSuccess = true
+        } else if (data?.type == MaterialType.MATERIAL_FURNITURE_SUITE_FORMULA) {
+            val fId = data.itemUse[0].params[0].toInt()
+            session.account.inventory.materials.remove(material.id)
+            session.account.unlockedFurnitureSuites.add(fId)
+            session.send(PacketUnlockedFurnitureSuiteDataNotify(session.account.unlockedFurnitureSuites))
+            useSuccess = true
         } else if (material.id == RESIN_FRAGILE || material.id == RESIN_TRANSIENT) {
-            materialAdd(session, RESIN_ID, 60 * req.count, ActionReason.PlayerUseItem)
+            materialAdd(session, RESIN_ID, 60 * req.count)
+            session.send(PacketItemAddHintNotify(material.id, req.count, ActionReason.PlayerUseItem))
             used = req.count // Set used amount.
         } else if (material.id == WELKIN_ID) {
             player.rechargeMoonCard()
@@ -225,12 +239,12 @@ object InventoryService {
         }
         // TODO MATERIAL_CHEST MATERIAL_CHEST_BATCH_USE
 
-        if (used > 0) materialRemove(material, used)
+        if (used > 0) pay(session, listOf(CostItem(material.id, 1)), count=used)
         session.send(PacketUseItemRsp(if (used > 0 || useSuccess) material else null))
     }
 
     fun materialDestroy(session: GameSession, req: DestroyMaterialReq) {
-        // TODO could be relic too
+        // TODO could be relic or weapon too
         val inv = session.account.inventory
         val costs = req.materialListList.map { info ->
             val material = inv.materials.values.find { it.guid == info.guid }!!
@@ -242,7 +256,7 @@ object InventoryService {
         session.send(PacketDestroyMaterialRsp(returnMaterial))
     }
 
-    fun materialCombine(session: GameSession, req: CombineReq) {
+    fun materialCombine(session: GameSession, req: CombineReq) { // combine through alchemy
         val data = combineData[req.combineId]!!
         pay(session, data.materials, data.moraCost, req.combineCount)
         materialAdd(session, data.resultItemId, data.resultItemCount)

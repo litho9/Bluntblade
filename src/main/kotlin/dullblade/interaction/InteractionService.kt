@@ -12,7 +12,7 @@ abstract class EntityBaseGadget(scene: Scene) : GameEntity(scene) {
 class EntityItem(
     scene: Scene,
     override val gadgetId: Int,
-    val item: InventoryItem,
+    val item: GameItem,
     val guid: Long,
     val isShare: Boolean = true
 ) : EntityBaseGadget(scene) {

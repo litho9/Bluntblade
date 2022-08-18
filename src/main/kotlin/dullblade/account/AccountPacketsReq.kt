@@ -64,11 +64,11 @@ class PacketPlayerDataNotify(account: Account)
     nickName = account.nickname
     isFirstLoginToday = true
     regionId = account.regionId
-    propMap.putAll(account.properties.mapValues { (key, value) ->
-        propValue {
-            type = key
+    propMap.putAll(account.properties.map { (key, value) ->
+        key.id to propValue {
+            type = key.id
             ival = value
             this.value = value
         }
-    })
+    }.toMap())
 }, buildHeader(2))

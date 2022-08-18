@@ -48,7 +48,9 @@ data class Account(
     val level: Int = 1,
     val forgeQueues: MutableList<ForgeQueue> = ArrayList(),
     val unlockedForgingBlueprints: MutableSet<Int> = HashSet(),
-    val unlockedCombines: MutableSet<Int> = HashSet()
+    val unlockedCombines: MutableSet<Int> = HashSet(),
+    val unlockedFurniture: MutableSet<Int> = HashSet(),
+    val unlockedFurnitureSuites: MutableSet<Int> = HashSet(),
 ) {
     fun newGuid() = (uid.toLong() shl 32) + ++nextGuid
     fun curTeam() = teams[curTeamIdx]

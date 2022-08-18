@@ -1,8 +1,5 @@
 package dullblade.game
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap
-import java.util.stream.Stream
-
 enum class WatcherTriggerType(val value: Int) {
     TRIGGER_NONE(0),
     TRIGGER_COMBAT_CONFIG_COMMON(1),
@@ -303,24 +300,4 @@ enum class WatcherTriggerType(val value: Int) {
     TRIGGER_PHOTO_FINISH_POS_ID(1135),
     TRIGGER_CRYSTAL_LINK_LEVEL_SCORE_REACH(1138),
     TRIGGER_CRYSTAL_LINK_TOTAL_MAX_SCORE_REACH(1139);
-
-    companion object {
-        private val map: Int2ObjectMap<WatcherTriggerType> = Int2ObjectOpenHashMap()
-        private val stringMap: MutableMap<String, WatcherTriggerType> = HashMap()
-
-        init {
-            Stream.of(*values()).forEach { e: WatcherTriggerType? ->
-                map.put(dullblade.game.e.getValue(), dullblade.game.e)
-                stringMap[dullblade.game.e.name] = dullblade.game.e
-            }
-        }
-
-        fun getTypeByValue(value: Int): WatcherTriggerType {
-            return map.getOrDefault(value, TRIGGER_NONE)
-        }
-
-        fun getTypeByName(name: String): WatcherTriggerType {
-            return stringMap.getOrDefault(name, TRIGGER_NONE)
-        }
-    }
 }

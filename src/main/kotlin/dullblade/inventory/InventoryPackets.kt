@@ -298,3 +298,17 @@ class PacketCombineRsp(req: CombineReq, result: List<CostItem>)
 class PacketCombineDataNotify(unlockedCombines: Set<Int>) : BasePacket(PacketOpcodes.CombineDataNotify, combineDataNotify {
     combineIdList.addAll(unlockedCombines)
 })
+
+class PacketUnlockedFurnitureFormulaDataNotify(unlocks: Set<Int>) :
+    BasePacket(PacketOpcodes.UnlockedFurnitureFormulaDataNotify,
+        unlockedFurnitureFormulaDataNotify {
+            furnitureIdList.addAll(unlocks)
+            isAll = true
+        })
+
+class PacketUnlockedFurnitureSuiteDataNotify(unlocks: Set<Int>) :
+    BasePacket(PacketOpcodes.UnlockedFurnitureSuiteDataNotify,
+        unlockedFurnitureSuiteDataNotify {
+            furnitureSuiteIdList.addAll(unlocks)
+            isAll = true
+        })

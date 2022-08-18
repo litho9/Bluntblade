@@ -64,13 +64,13 @@ enum class PlayerProperty(
 
 @Serializable
 class PropMap(
-    private val underlying: MutableMap<PlayerProperty, Float> = EnumMap(PlayerProperty::class.java)
-) : MutableMap<PlayerProperty, Float> by underlying {
-    override fun get(key: PlayerProperty) = underlying[key] ?: 0f
-    fun add(prop: PlayerProperty, value: Float) {
-        underlying[prop] = (underlying[prop] ?: 0f) + value
+    private val underlying: MutableMap<PlayerProperty, Long> = EnumMap(PlayerProperty::class.java)
+) : MutableMap<PlayerProperty, Long> by underlying {
+    override fun get(key: PlayerProperty) = underlying[key] ?: 0L
+    fun add(prop: PlayerProperty, value: Long) {
+        underlying[prop] = (underlying[prop] ?: 0L) + value
     }
     fun add(prop: PlayerProperty, value: Int) {
-        add(prop, value.toFloat())
+        add(prop, value.toLong())
     }
 }
