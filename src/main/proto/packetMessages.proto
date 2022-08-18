@@ -7,6 +7,14 @@ message PacketHead {
   uint64 timestamp = 6;
 }
 
+message ServerBuff {
+  uint32 server_buff_uid = 1;
+  uint32 server_buff_id = 2;
+  uint32 server_buff_type = 3;
+  uint32 instanced_modifier_id = 4;
+  bool is_modifier_added = 5;
+}
+
 enum Retcode {
   RET_SUCC = 0;
   RET_SVR_ERROR = 1;

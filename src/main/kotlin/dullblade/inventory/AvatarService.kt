@@ -122,6 +122,28 @@ object AvatarService {
         avatar.proudSkillIds.add(proudSkillIdFor(skillDepotId, 0)!!)
     }
 
+    fun revive(session: GameSession, guid: Long): Boolean {
+        val avatar = session.account.avatars[guid]!!
+        if (avatar.prop(CUR_HP) > 0f) return false
+        avatar.prop(CUR_HP, avatar.prop(MAX_HP) * .1f)
+        session.send(PacketAvatarFightPropUpdateNotify(avatar, CUR_HP))
+        session.send(PacketAvatarLifeStateChangeNotify(avatar, LifeState.ALIVE.value))
+        return true
+    }
+
+    fun heal(session: GameSession, guid: Long, satiationParams: List<Int>): Boolean {
+        val avatar = session.account.avatars[guid]!!
+        val maxHp = avatar.prop(MAX_HP)
+        val curHp = avatar.prop(CUR_HP)
+        if (curHp == 0f) return false
+        val (healRate, healAmount) = satiationParams
+        val heal = maxHp * healRate / 100 + healAmount / 100
+        avatar.prop(CUR_HP, (curHp + heal).coerceAtMost(maxHp))
+        session.send(PacketAvatarFightPropUpdateNotify(avatar, CUR_HP))
+        session.send(PacketAvatarLifeStateChangeNotify(avatar, LifeState.ALIVE.value))
+        return true
+    }
+
     fun recalcStats(session: GameSession, guid: Long?) {
         session.account.avatars[guid]?.let { recalcStats(session, it) }
     }
@@ -222,6 +244,10 @@ object AvatarService {
     private const val MC_MALE_ID = 10000005
     private const val MC_FEMALE_ID = 10000007
     private val bookExpMap = mapOf(104001 to 1000, 104002 to 5000, 104003 to 20000)
+
+    enum class LifeState(val value: Int) {
+        NONE(0), ALIVE(1), DEAD(2), REVIVE(3);
+    }
 }
 
 class StatMap(

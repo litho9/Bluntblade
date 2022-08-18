@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.net.InetSocketAddress
 import java.security.SecureRandom
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
 
 val address = InetSocketAddress(22102)
@@ -208,3 +210,5 @@ open class BasePacket(
         }.toByteArray()
     }
 }
+
+fun today(): LocalDate = LocalDate.now(ZoneId.of("America/Phoenix")) // arbitrary GMT-7 timezone

@@ -1,6 +1,7 @@
 package dullblade
 
 import dullblade.game.PropMap
+import dullblade.game.Stat
 import kotlinx.serialization.Serializable
 
 fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
@@ -51,6 +52,9 @@ data class Account(
     val unlockedCombines: MutableSet<Int> = HashSet(),
     val unlockedFurniture: MutableSet<Int> = HashSet(),
     val unlockedFurnitureSuites: MutableSet<Int> = HashSet(),
+
+    var moonCardEnd: String? = null, // Ex.: "2020-09-26", Java is big dumb and doesn't serialize LocalDate
+    var moonCardLastGet: String? = null, // Ex.: "2020-09-26"
 ) {
     fun newGuid() = (uid.toLong() shl 32) + ++nextGuid
     fun curTeam() = teams[curTeamIdx]
@@ -120,13 +124,6 @@ class Avatar(
     val skillExtraCharges: MutableMap<Int, Int> = mutableMapOf(),
     val proudSkillBonusMap: MutableMap<Int, Int> = mutableMapOf()
 ) {
+    fun prop(stat: Stat) = fightProperties[stat.id] ?: 0f
+    fun prop(stat: Stat, value: Float) { fightProperties[stat.id] = value }
 }
-
-open class ItemData(
-    open val id: Int,
-//    val isEquip: Boolean = false,
-//    // weapon
-//    val rankLevel: Int,
-//    // relic
-//    val maxLevel: Int, val mainPropDepotId: Int, val appendPropDepotId: Int
-)

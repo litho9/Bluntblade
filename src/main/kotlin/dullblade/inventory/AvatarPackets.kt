@@ -5,6 +5,7 @@ import dullblade.Avatar
 import dullblade.BasePacket
 import dullblade.game.PacketOpcodes
 import dullblade.game.PlayerProperty
+import dullblade.game.Stat
 
 fun prop(property: PlayerProperty, value: Long) = property.id to propValue {
     type = property.id
@@ -61,3 +62,17 @@ class PacketAvatarFightPropNotify(
         avatarGuid = guid
         fightPropMap.putAll(props)
     })
+
+class PacketAvatarFightPropUpdateNotify(avatar: Avatar, stat: Stat)
+    : BasePacket(PacketOpcodes.AvatarFightPropUpdateNotify,
+    avatarFightPropUpdateNotify {
+    avatarGuid = avatar.guid
+    fightPropMap.put(stat.id, avatar.prop(stat))
+})
+
+class PacketAvatarLifeStateChangeNotify(avatar: Avatar, lifeState: Int)
+    : BasePacket(PacketOpcodes.AvatarLifeStateChangeNotify,
+    avatarLifeStateChangeNotify {
+    avatarGuid = avatar.guid
+    this.lifeState = lifeState
+})

@@ -8,6 +8,7 @@ import dullblade.game.MaterialType
 import dullblade.game.WatcherTriggerType
 import dullblade.inventory.InventoryMessages.*
 import dullblade.queue.BattlePassService
+import java.time.LocalDate
 
 object InventoryService {
     fun lock(session: GameSession, req: SetEquipLockStateReq/*targetEquipGuid: Long, isLocked: Boolean*/) {
@@ -198,10 +199,10 @@ object InventoryService {
         var useSuccess = false
         if (data?.type == MaterialType.MATERIAL_FOOD
             && data.useTarget == "ITEM_USE_TARGET_SPECIFY_DEAD_AVATAR") {
-            used = TeamService.revive(session, session.account.avatars[req.targetGuid])
+            used = if (AvatarService.revive(session, req.targetGuid)) 1 else 0
         } else if (data?.type == MaterialType.MATERIAL_NOTICE_ADD_HP
             && data.useTarget == "ITEM_USE_TARGET_SPECIFY_ALIVE_AVATAR") {
-            used = TeamService.feed(session, session.account.avatars[req.targetGuid], data.satiationParams)
+            used = if (AvatarService.heal(session, req.targetGuid, data.satiationParams)) 1 else 0
         } else if (data?.type == MaterialType.MATERIAL_CONSUME && data.itemUse[0].op == "ITEM_USE_UNLOCK_FORGE") {
             val forgeId = data.itemUse[0].params[0].toInt()
             session.account.inventory.materials.remove(material.id)
@@ -234,7 +235,11 @@ object InventoryService {
             session.send(PacketItemAddHintNotify(material.id, req.count, ActionReason.PlayerUseItem))
             used = req.count // Set used amount.
         } else if (material.id == WELKIN_ID) {
-            player.rechargeMoonCard()
+            materialAdd(session, CRYSTAL_ID, 300)
+            val prevEnd = if (session.account.moonCardEnd == null) today() else
+                LocalDate.parse(session.account.moonCardEnd)
+            session.account.moonCardEnd = prevEnd.plusDays(30).toString()
+            session.account.moonCardLastGet = today().toString()
             used = 1
         }
         // TODO MATERIAL_CHEST MATERIAL_CHEST_BATCH_USE
@@ -273,10 +278,11 @@ object InventoryService {
         const val LIMIT_ALL = 30000
 
         const val MORA_ID: Int = 202
-        const val WELKIN_ID = 1202
-        const val RESIN_ID = 106
-        const val RESIN_FRAGILE = 107009
-        const val RESIN_TRANSIENT = 107012
+        private const val CRYSTAL_ID = 203
+        private const val WELKIN_ID = 1202
+        private const val RESIN_ID = 106
+        private const val RESIN_FRAGILE = 107009
+        private const val RESIN_TRANSIENT = 107012
         const val WEAPON_ORE_1 = 104011 // Enhancement Ore
         const val WEAPON_ORE_2 = 104012 // Fine Enhancement Ore
         const val WEAPON_ORE_3 = 104013 // Mystic Enhancement Ore
