@@ -1,0 +1,293 @@
+syntax = "proto3";
+
+option java_package = "dullblade.account";
+
+// CmdId: 109
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message GetPlayerTokenReq {
+  uint32 account_type = 3;
+  string account_uid = 12;
+  string account_token = 14;
+  string account_ext = 2;
+  uint32 uid = 8;
+  bool is_guest = 4;
+  uint32 platform_type = 7;
+  uint32 cloud_client_ip = 13;
+  string online_id = 9;
+  string psn_region = 15;
+  uint32 channel_id = 10;
+  uint32 sub_channel_id = 1;
+  string country_code = 11;
+  string psn_id = 5;
+  string client_ip_str = 6;
+  string birthday = 966;
+  uint32 NNCIBOLDIAI = 1883;
+}
+
+// CmdId: 131
+// EnetChannelId: 0
+// EnetIsReliable: true
+message GetPlayerTokenRsp {
+  int32 retcode = 7;
+  string msg = 10;
+  uint32 uid = 2;
+  string token = 1;
+  uint32 black_uid_end_time = 15;
+  uint32 account_type = 12;
+  string account_uid = 4;
+  bool is_proficient_player = 5;
+  string secret_key = 13;
+  uint32 gm_uid = 14;
+  uint64 secret_key_seed = 11;
+  bytes security_cmd_buffer = 6;
+  uint32 platform_type = 3;
+  bytes extra_bin_data = 8;
+  bool is_guest = 9;
+  uint32 channel_id = 1614;
+  uint32 sub_channel_id = 1911;
+  uint32 tag = 1855;
+  string country_code = 739;
+  bool is_login_white_list = 977;
+  string psn_id = 245;
+  string client_version_random_key = 1387;
+  uint32 reg_platform = 633;
+  string client_ip_str = 1238;
+  string birthday = 1109;
+  uint32 NNCIBOLDIAI = 1728;
+  bool FNECFLEAKKO = 1679;
+}
+
+message AdjustTrackingInfo {
+  string idfa = 1;
+  string gps_adid = 2;
+  string fire_adid = 3;
+  string adid = 4;
+  string event_token = 5;
+  string app_token = 6;
+}
+
+message TrackingIOInfo {
+  string appid = 1;
+  string deviceid = 2;
+  string mac = 3;
+  string rydevicetype = 4;
+  string client_tz = 5;
+  string current_caid = 6;
+  string cached_caid = 7;
+}
+
+// CmdId: 141
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message PlayerLoginReq {
+  string token = 5;
+  string client_version = 7;
+  string system_version = 12;
+  string device_name = 3;
+  string device_uuid = 14;
+  uint32 target_uid = 15;
+  uint64 login_rand = 11;
+  bool is_editor = 2;
+  uint32 language_type = 13;
+  uint32 account_type = 1;
+  string account_uid = 8;
+  string platform = 6;
+  string device_info = 4;
+  uint32 platform_type = 10;
+  bool is_guest = 9;
+  uint32 cloud_client_ip = 233;
+  uint32 gm_uid = 1423;
+  string checksum = 485;
+  string online_id = 1974;
+  uint32 client_token = 133;
+  bytes security_cmd_reply = 96;
+  bytes extra_bin_data = 814;
+  string cps = 467;
+  uint32 channel_id = 2028;
+  uint32 sub_channel_id = 1571;
+  string checksum_client_version = 1844;
+  uint32 tag = 843;
+  TrackingIOInfo tracking_io_info = 1882;
+  string country_code = 1060;
+  uint32 client_data_version = 1570;
+  bytes environment_error_code = 1303;
+  uint32 target_home_owner_uid = 1054;
+  string psn_id = 921;
+  string client_verison_hash = 1972;
+  bool is_transfer = 1918;
+  uint32 reg_platform = 167;
+  uint32 target_home_param = 1129;
+  AdjustTrackingInfo adjust_tracking_info = 280;
+  string birthday = 174;
+  string MADLMMNJICA = 135;
+  string CCLJBEJHFOP = 745;
+  uint32 LKCFGDBHHIL = 1881;
+}
+
+message RegionInfo {
+  string gateserver_ip = 1;
+  uint32 gateserver_port = 2;
+  string pay_callback_url = 3;
+  string area_type = 7;
+  string resource_url = 8;
+  string data_url = 9;
+  string feedback_url = 10;
+  string bulletin_url = 11;
+  string resource_url_bak = 12;
+  string data_url_bak = 13;
+  uint32 client_data_version = 14;
+  string handbook_url = 16;
+  uint32 client_silence_data_version = 18;
+  string client_data_md5 = 19;
+  string client_silence_data_md5 = 20;
+  ResVersionConfig res_version_config = 22;
+  bytes secret_key = 23;
+  string official_community_url = 24;
+  string client_version_suffix = 26;
+  string client_silence_version_suffix = 27;
+  bool use_gateserver_domain_name = 28;
+  string gateserver_domain_name = 29;
+  string user_center_url = 30;
+  string account_bind_url = 31;
+  string cdkey_url = 32;
+  string privacy_policy_url = 33;
+  string next_resource_url = 34;
+  ResVersionConfig next_res_version_config = 35;
+}
+
+message BlockInfo {
+  uint32 block_id = 1;
+  uint32 data_version = 2;
+  bytes bin_data = 3;
+  bool is_dirty = 4;
+}
+
+message FeatureBlockInfo {
+  uint32 feature_type = 1;
+  uint32 end_time = 2;
+}
+
+message ResVersionConfig {
+  uint32 version = 1;
+  bool relogin = 2;
+  string md_5 = 3;
+  string release_total_size = 4;
+  string version_suffix = 5;
+  string branch = 6;
+  string next_script_version = 7;
+}
+
+message ShortAbilityHashPair {
+  int32 ability_name_hash = 1;
+  int32 ability_config_hash = 2;
+}
+
+// CmdId: 137
+// EnetChannelId: 0
+// EnetIsReliable: true
+message PlayerLoginRsp {
+  int32 retcode = 1;
+  bytes player_data = 6;
+  bool is_new_player = 11;
+  uint32 target_uid = 15;
+  uint64 login_rand = 12;
+  bool is_use_ability_hash = 3;
+  int32 ability_hash_code = 7;
+  map<string, int32> ability_hash_map = 13;
+  uint32 client_data_version = 14;
+  bool is_relogin = 2;
+  uint32 client_silence_data_version = 10;
+  string game_biz = 9;
+  uint32 player_data_version = 8;
+  string client_md_5 = 1706;
+  string client_silence_md_5 = 271;
+  ResVersionConfig res_version_config = 933;
+  map<uint32, BlockInfo> block_info_map = 1156;
+  string client_version_suffix = 1984;
+  string client_silence_version_suffix = 49;
+  repeated ShortAbilityHashPair short_ability_hash_map = 364;
+  bytes sc_info = 2014;
+  bool is_audit = 1545;
+  bool is_sc_open = 1974;
+  string register_cps = 715;
+  repeated FeatureBlockInfo feature_block_info_list = 408;
+  bool is_data_need_relogin = 110;
+  string country_code = 1306;
+  ResVersionConfig next_res_version_config = 749;
+  string next_resource_url = 1744;
+  uint32 target_home_owner_uid = 945;
+  bool is_enable_client_hash_debug = 713;
+  bool is_transfer = 138;
+  double total_tick_time = 1923;
+  string birthday = 1977;
+}
+
+// CmdId: 2693
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message TakeAchievementRewardReq {
+  repeated uint32 id_list = 2;
+}
+
+// CmdId: 32
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message PingReq {
+  uint32 seq = 2;
+  uint32 client_time = 14;
+  bytes sc_data = 11;
+  float ue_time = 15;
+  double total_tick_time = 12;
+}
+
+// CmdId: 17
+// EnetChannelId: 0
+// EnetIsReliable: true
+message PingRsp {
+  int32 retcode = 9;
+  uint32 seq = 4;
+  uint32 client_time = 8;
+}
+
+// CmdId: 198
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message SetPlayerBornDataReq {
+  uint32 avatar_id = 3;
+  string nick_name = 12;
+}
+
+// CmdId: 145
+// EnetChannelId: 0
+// EnetIsReliable: true
+message SetPlayerBornDataRsp {
+  int32 retcode = 4;
+}
+
+// CmdId: 1435
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message GetAuthkeyReq {
+  string auth_appid = 12;
+  uint32 sign_type = 15;
+  uint32 authkey_ver = 7;
+}
+
+// CmdId: 1449
+// EnetChannelId: 0
+// EnetIsReliable: true
+message GetAuthkeyRsp {
+  int32 retcode = 11;
+  string authkey = 1;
+  string auth_appid = 2;
+  uint32 sign_type = 7;
+  uint32 authkey_ver = 10;
+  string game_biz = 4;
+}

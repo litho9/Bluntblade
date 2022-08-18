@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option java_package = "dullblade.interaction";
+
+enum InterOpType {
+  INTER_OP_TYPE_FINISH = 0;
+  INTER_OP_TYPE_START = 1;
+}
+
+// CmdId: 809
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message GadgetInteractReq {
+  uint32 gadget_entity_id = 9;
+  InterOpType op_type = 6;
+  uint32 gadget_id = 14;
+  bool is_use_condense_resin = 15;
+  ResinCostType resin_cost_type = 11;
+  uint32 GCIEIJIOADO = 12;
+
+  enum ResinCostType {
+    NONE = 0;
+    NORMAL = 1;
+    CONDENSE = 2;
+    REUNION_PRIVILEGE = 3;
+    OP_ACTIVITY = 4;
+    MATERIAL = 5;
+  }
+}
+
+// CmdId: 831
+// EnetChannelId: 0
+// EnetIsReliable: true
+message GadgetInteractRsp {
+  int32 retcode = 4;
+  uint32 gadget_entity_id = 6;
+  InteractType interact_type = 9;
+  InterOpType op_type = 1;
+  uint32 gadget_id = 14;
+
+  enum InteractType {
+    NONE = 0;
+    PICK_ITEM = 1;
+    GATHER = 2;
+    OPEN_CHEST = 3;
+    OPEN_STATUE = 4;
+    CONSUM = 5;
+    MP_PLAY_REWARD = 6;
+    VIEW = 7;
+    GENERAL_REWARD = 8;
+    MIRACLE_RING = 9;
+    FOUNDATION = 10;
+    ECHO_SHELL = 11;
+    HOME_GATHER = 12;
+    ENV_ANIMAL = 13;
+    QUEST_GADGET = 14;
+    LIEIKFDFMGF = 15;
+  }
+}

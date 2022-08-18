@@ -1,0 +1,288 @@
+syntax = "proto3";
+
+option java_package = "dullblade.inventory";
+
+import "inventoryMessages.proto"; // Item
+
+// CmdId: 1027
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message AvatarSkillUpgradeReq {
+  uint64 avatar_guid = 1;
+  uint32 avatar_skill_id = 5;
+  uint32 old_level = 10;
+}
+
+// CmdId: 1680
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message AvatarUpgradeReq {
+  uint32 item_id = 9;
+  uint32 count = 12;
+  uint64 avatar_guid = 14;
+}
+
+// CmdId: 1055
+// EnetChannelId: 0
+// EnetIsReliable: true
+message ProudSkillChangeNotify {
+  uint64 avatar_guid = 12;
+  uint32 entity_id = 11;
+  uint32 skill_depot_id = 7;
+  repeated uint32 proud_skill_list = 4;
+}
+
+// CmdId: 1255
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarPropNotify {
+  uint64 avatar_guid = 4;
+  map<uint32, int64> prop_map = 1;
+}
+
+// CmdId: 1668
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarPromoteRsp {
+  int32 retcode = 15;
+  uint64 guid = 7;
+}
+
+// CmdId: 1779
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarUpgradeRsp {
+  int32 retcode = 6;
+  uint64 avatar_guid = 15;
+  uint32 old_level = 5;
+  uint32 cur_level = 7;
+  map<uint32, float> old_fight_prop_map = 2;
+  map<uint32, float> cur_fight_prop_map = 4;
+}
+
+// CmdId: 1030
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarSkillChangeNotify {
+  uint64 avatar_guid = 4;
+  uint32 entity_id = 15;
+  uint32 skill_depot_id = 5;
+  uint32 avatar_skill_id = 2;
+  uint32 old_level = 10;
+  uint32 cur_level = 7;
+}
+
+// CmdId: 1007
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarSkillUpgradeRsp {
+  int32 retcode = 3;
+  uint64 avatar_guid = 10;
+  uint32 avatar_skill_id = 2;
+  uint32 old_level = 5;
+  uint32 cur_level = 7;
+}
+
+// CmdId: 1041
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarUnlockTalentNotify {
+  uint64 avatar_guid = 1;
+  uint32 entity_id = 15;
+  uint32 talent_id = 13;
+  uint32 skill_depot_id = 14;
+}
+
+// CmdId: 1031
+// EnetChannelId: 0
+// EnetIsReliable: true
+message UnlockAvatarTalentRsp {
+  int32 retcode = 2;
+  uint64 avatar_guid = 14;
+  uint32 talent_id = 12;
+}
+
+// CmdId: 1097
+// EnetChannelId: 0
+// EnetIsReliable: true
+message ProudSkillExtraLevelNotify {
+  uint64 avatar_guid = 14;
+  uint32 talent_type = 10;
+  uint32 talent_index = 4;
+  uint32 extra_level = 5;
+}
+
+// CmdId: 1085
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarSkillMaxChargeCountNotify {
+  uint64 avatar_guid = 15;
+  uint32 skill_id = 2;
+  uint32 max_charge_count = 1;
+}
+
+message FetterData {
+  uint32 fetter_id = 1;
+  uint32 fetter_state = 2;
+  repeated uint32 cond_index_list = 3;
+}
+
+message AvatarFetterInfo {
+  uint32 exp_number = 1;
+  uint32 exp_level = 2;
+  repeated uint32 open_id_list = 3;
+  repeated uint32 finish_id_list = 4;
+  repeated uint32 rewarded_fetter_level_list = 5;
+  repeated FetterData fetter_list = 6;
+}
+
+// CmdId: 1777
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarFetterDataNotify {
+  map<uint64, AvatarFetterInfo> fetter_info_map = 1;
+}
+
+message AvatarEquipAffixInfo {
+  uint32 equip_affix_id = 1;
+  uint32 left_cd_time = 2;
+}
+
+message AvatarExcelInfo {
+  uint64 prefab_path_hash = 1;
+  uint64 prefab_path_remote_hash = 2;
+  uint64 controller_path_hash = 3;
+  uint64 controller_path_remote_hash = 4;
+  uint64 combat_config_hash = 5;
+}
+
+enum AvatarExpeditionState {
+  AVATAR_EXPEDITION_STATE_NONE = 0;
+  AVATAR_EXPEDITION_STATE_DOING = 1;
+  AVATAR_EXPEDITION_STATE_FINISH_WAIT_REWARD = 2;
+  AVATAR_EXPEDITION_STATE_CALLBACK_WAIT_REWARD = 3;
+  AVATAR_EXPEDITION_STATE_LOCKED = 4;
+}
+
+message AvatarSkillInfo {
+  uint32 pass_cd_time = 1;
+  repeated uint32 full_cd_time_list = 2;
+  uint32 max_charge_count = 3;
+}
+
+message PropValue {
+  uint32 type = 1;
+  int64 value = 4;
+  oneof valueFormats {
+    int64 ival = 2;
+    float fval = 3;
+  }
+}
+
+// CmdId: 135
+// EnetChannelId: 0
+// EnetIsReliable: true
+message PlayerDataNotify {
+  string nick_name = 15;
+  uint64 server_time = 2;
+  bool is_first_login_today = 11;
+  uint32 region_id = 9;
+  map<uint32, PropValue> prop_map = 8;
+}
+
+message TrialAvatarGrantRecord {
+  uint32 grant_reason = 1;
+  uint32 from_parent_quest_id = 2;
+
+  enum GrantReason {
+    GRANT_REASON_INVALID = 0;
+    GRANT_REASON_BY_QUEST = 1;
+    GRANT_REASON_BY_TRIAL_AVATAR_ACTIVITY = 2;
+    GRANT_REASON_BY_DUNGEON_ELEMENT_CHALLENGE = 3;
+    GRANT_REASON_BY_MIST_TRIAL_ACTIVITY = 4;
+    GRANT_REASON_BY_SUMO_ACTIVITY = 5;
+    GRANT_REASON_ELPMDIEIOHP = 6;
+    GRANT_REASON_FALPDBLGHJB = 7;
+    GRANT_REASON_GAMADMGGMBC = 8;
+  }
+}
+
+message TrialAvatarInfo {
+  uint32 trial_avatar_id = 1;
+  repeated Item trial_equip_list = 2;
+  TrialAvatarGrantRecord grant_record = 3;
+}
+
+message AvatarInfo {
+  uint32 avatar_id = 1;
+  uint64 guid = 2;
+  map<uint32, PropValue> prop_map = 3;
+  uint32 life_state = 4;
+  repeated uint64 equip_guid_list = 5;
+  repeated uint32 talent_id_list = 6;
+  map<uint32, float> fight_prop_map = 7;
+  TrialAvatarInfo trial_avatar_info = 9;
+  map<uint32, AvatarSkillInfo> skill_map = 10;
+  uint32 skill_depot_id = 11;
+  AvatarFetterInfo fetter_info = 12;
+  uint32 core_proud_skill_level = 13;
+  repeated uint32 inherent_proud_skill_list = 14;
+  map<uint32, uint32> skill_level_map = 15;
+  AvatarExpeditionState expedition_state = 16;
+  map<uint32, uint32> proud_skill_extra_level_map = 17;
+  bool is_focus = 18;
+  uint32 avatar_type = 19;
+  repeated uint32 team_resonance_list = 20;
+  uint32 wearing_flycloak_id = 21;
+  repeated AvatarEquipAffixInfo equip_affix_list = 22;
+  uint32 born_time = 23;
+  repeated uint32 pending_promote_reward_list = 24;
+  uint32 costume_id = 25;
+  AvatarExcelInfo excel_info = 26;
+  uint32 anim_hash = 27;
+}
+
+message AvatarTeam {
+  repeated uint64 avatar_guid_list = 1;
+  string team_name = 2;
+}
+
+// CmdId: 1695
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarDataNotify {
+  repeated AvatarInfo avatar_list = 15;
+  map<uint32, AvatarTeam> avatar_team_map = 6;
+  uint32 cur_avatar_team_id = 2;
+  fixed64 choose_avatar_guid = 11;
+  repeated uint64 temp_avatar_guid_list = 14;
+  repeated uint32 owned_flycloak_list = 8;
+  repeated uint32 owned_costume_list = 7;
+}
+
+// CmdId: 1232
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarFightPropNotify {
+  uint64 avatar_guid = 3;
+  map<uint32, float> fight_prop_map = 6;
+}
+
+// CmdId: 1711
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message AvatarPromoteReq {
+  uint64 guid = 9;
+}
+
+// CmdId: 1009
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message UnlockAvatarTalentReq {
+  uint64 avatar_guid = 13;
+  uint32 talent_id = 9;
+}
