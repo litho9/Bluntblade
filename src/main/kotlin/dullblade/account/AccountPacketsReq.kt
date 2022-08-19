@@ -5,7 +5,6 @@ import dullblade.Account
 import dullblade.BasePacket
 import dullblade.GameSession
 import dullblade.GameSessionKcp
-import dullblade.game.PacketOpcodes.*
 import dullblade.inventory.playerDataNotify
 import dullblade.inventory.propValue
 
@@ -14,7 +13,7 @@ import dullblade.inventory.propValue
 // HandlerGetAuthkeyReq
 
 class PacketGetPlayerTokenRsp(session: GameSession)
-    : BasePacket(GetPlayerTokenRsp, getPlayerTokenRsp {
+    : BasePacket(getPlayerTokenRsp {
         uid = session.account.uid
         token = session.account.token
         accountType = 1
@@ -29,7 +28,7 @@ class PacketGetPlayerTokenRsp(session: GameSession)
         clientIpStr = session.getHostAddress()
     }, buildHeader(++session.lastClientSeq), GameSessionKcp.DISPATCH_KEY)
 
-class PacketPlayerLoginRsp : BasePacket(PlayerLoginRsp, playerLoginRsp {
+class PacketPlayerLoginRsp : BasePacket(playerLoginRsp {
     isUseAbilityHash = true // true
     abilityHashCode = 1844674 // 1844674
     gameBiz = "hk4e_global"
@@ -56,11 +55,10 @@ class PacketPlayerLoginRsp : BasePacket(PlayerLoginRsp, playerLoginRsp {
 }
 
 class PacketTakeAchievementRewardReq
-    : BasePacket(TakeAchievementRewardReq,
-        takeAchievementRewardReq {})
+    : BasePacket(takeAchievementRewardReq {})
 
 class PacketPlayerDataNotify(account: Account)
-    : BasePacket(PlayerDataNotify, playerDataNotify {
+    : BasePacket(playerDataNotify {
     nickName = account.nickname
     isFirstLoginToday = true
     regionId = account.regionId

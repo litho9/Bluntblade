@@ -198,10 +198,10 @@ class GameSessionKcp(val ukcp: Ukcp): GameSession() {
 }
 
 open class BasePacket(
-    val opcode: PacketOpcodes,
     val data: GeneratedMessageV3?,
     var header: ByteArray = ByteArray(0),
-    var encryption: ByteArray? = null // null | Crypto.DISPATCH_KEY | Crypto.ENCRYPT_KEY
+    var encryption: ByteArray? = null, // null | Crypto.DISPATCH_KEY | Crypto.ENCRYPT_KEY
+    val opcode: PacketOpcodes = PacketOpcodes.valueOf(data!!.javaClass.simpleName),
 ) {
     companion object {
         fun buildHeader(clientSequence: Int = 0): ByteArray = packetHead {

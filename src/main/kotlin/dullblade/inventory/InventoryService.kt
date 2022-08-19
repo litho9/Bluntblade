@@ -11,7 +11,7 @@ import dullblade.queue.BattlePassService
 import java.time.LocalDate
 
 object InventoryService {
-    fun lock(session: GameSession, req: SetEquipLockStateReq/*targetEquipGuid: Long, isLocked: Boolean*/) {
+    fun lock(session: GameSession, req: SetEquipLockStateReq) {
         val inv = session.account.inventory
         val equip = inv.weapons[req.targetEquipGuid] ?: inv.relics[req.targetEquipGuid]!!
         equip.locked = req.isLocked
@@ -270,41 +270,27 @@ object InventoryService {
         session.send(PacketCombineRsp(req, result))
     }
 
-//    companion object {
-        const val LIMIT_WEAPONS = 2000
-        const val LIMIT_RELICS = 2000
-        const val LIMIT_MATERIALS = 2000
-        const val LIMIT_FURNITURE = 2000
-        const val LIMIT_ALL = 30000
+    const val LIMIT_WEAPONS = 2000
+    const val LIMIT_RELICS = 2000
+    const val LIMIT_MATERIALS = 2000
+    const val LIMIT_FURNITURE = 2000
+    const val LIMIT_ALL = 30000
 
-        const val MORA_ID: Int = 202
-        private const val CRYSTAL_ID = 203
-        private const val WELKIN_ID = 1202
-        private const val RESIN_ID = 106
-        private const val RESIN_FRAGILE = 107009
-        private const val RESIN_TRANSIENT = 107012
-        const val WEAPON_ORE_1 = 104011 // Enhancement Ore
-        const val WEAPON_ORE_2 = 104012 // Fine Enhancement Ore
-        const val WEAPON_ORE_3 = 104013 // Mystic Enhancement Ore
-        private const val WEAPON_ORE_EXP_1 = 400 // Enhancement Ore
-        private const val WEAPON_ORE_EXP_2 = 2000 // Fine Enhancement Ore
-        private const val WEAPON_ORE_EXP_3 = 10000 // Mystic Enhancement Ore
-        private val oreExpMap = mapOf(104011 to 400, 104012 to 2000, 104013 to 10000)
-        private val relicExpMap = mapOf(105002 to 2500, 105003 to 10000)
-        private fun getLeftoverOres(leftover: Int): List<Pair<Int, Int>> {
-            var left = leftover
-            return arrayOf(
-                WEAPON_ORE_3 to (left / WEAPON_ORE_EXP_3)
-                    .also { left %= WEAPON_ORE_EXP_3 },
-                WEAPON_ORE_2 to (left / WEAPON_ORE_EXP_2)
-                    .also { left %= WEAPON_ORE_EXP_2 },
-                WEAPON_ORE_1 to left / WEAPON_ORE_EXP_1
-            ).filter { (_, count) -> count > 0 }
-        }
+    const val MORA_ID: Int = 202
+    private const val CRYSTAL_ID = 203
+    private const val WELKIN_ID = 1202
+    private const val RESIN_ID = 106
+    private const val RESIN_FRAGILE = 107009
+    private const val RESIN_TRANSIENT = 107012
+    private val oreExpMap = mapOf(104011 to 400, 104012 to 2000, 104013 to 10000)
+    private val relicExpMap = mapOf(105002 to 2500, 105003 to 10000)
+    private fun getLeftoverOres(leftover: Int) = arrayOf(
+        104013 to leftover / 10000,
+        104012 to leftover % 10000 / 2000,
+        104011 to leftover % 10000 % 2000 / 400
+    ).filter { (_, count) -> count > 0 }
 
     fun add(id: Int, count: Int): GameItem {
         TODO("Not yet implemented")
     }
-//    }
 }
-

@@ -4,7 +4,6 @@ import dullblade.BasePacket
 import dullblade.ForgeQueue
 import dullblade.GameItem
 import dullblade.PacketMessages.Retcode
-import dullblade.game.PacketOpcodes
 import dullblade.inventory.itemParam
 
 private fun packetFor(queues: List<ForgeQueue>): Map<Int, QueueMessages.ForgeQueueData> {
@@ -21,7 +20,7 @@ private fun packetFor(queues: List<ForgeQueue>): Map<Int, QueueMessages.ForgeQue
 }
 
 class PacketForgeQueueDataNotify(queues: List<ForgeQueue>, removeIdx: Int? = null) :
-    BasePacket(PacketOpcodes.ForgeQueueDataNotify, forgeQueueDataNotify {
+    BasePacket(forgeQueueDataNotify {
         if (removeIdx != null) removedForgeQueueList.add(removeIdx)
         forgeQueueMap.putAll(packetFor(queues))
     })
@@ -31,7 +30,7 @@ class PacketForgeQueueManipulateRsp(
     output: List<GameItem> = emptyList(),
     refund: List<GameItem> = emptyList(),
     retCode: Retcode = Retcode.RET_SUCC,
-) : BasePacket(PacketOpcodes.ForgeQueueManipulateRsp, forgeQueueManipulateRsp {
+) : BasePacket(forgeQueueManipulateRsp {
     retcode = retCode.number
     manipulateType = type
     outputItemList.addAll(output.map { itemParam {
@@ -45,14 +44,13 @@ class PacketForgeQueueManipulateRsp(
 })
 
 class PacketForgeStartRsp(retCode: Retcode)
-    : BasePacket(PacketOpcodes.ForgeStartRsp,
-        forgeStartRsp { retcode = retCode.number })
+    : BasePacket(forgeStartRsp { retcode = retCode.number })
 
 class PacketForgeGetQueueDataRsp(
     maxQueues: Int,
     queues: List<ForgeQueue>,
     retCode: Retcode = Retcode.RET_SUCC,
-) : BasePacket(PacketOpcodes.ForgeGetQueueDataRsp, forgeGetQueueDataRsp {
+) : BasePacket(forgeGetQueueDataRsp {
         retcode = retCode.number
         maxQueueNum = maxQueues
         forgeQueueMap.putAll(packetFor(queues))
@@ -62,7 +60,7 @@ class PacketForgeDataNotify(
     maxQueues: Int,
     queues: List<ForgeQueue>,
     unlockedForgingBlueprints: Collection<Int>
-) : BasePacket(PacketOpcodes.ForgeDataNotify, forgeDataNotify {
+) : BasePacket(forgeDataNotify {
     forgeIdList.addAll(unlockedForgingBlueprints)
     maxQueueNum = maxQueues
     forgeQueueMap.putAll(packetFor(queues))

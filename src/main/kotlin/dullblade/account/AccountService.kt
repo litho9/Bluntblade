@@ -29,7 +29,7 @@ object AccountService {
         if (session.account.avatars.isEmpty()) {
 //            session.state = SessionState.PICKING_CHARACTER // Pick main character
             // Show opening cutscene if player has no avatars
-            session.send(BasePacket(PacketOpcodes.DoSetPlayerBornDataNotify, null))
+            session.send(BasePacket(null, opcode=PacketOpcodes.DoSetPlayerBornDataNotify))
         } else {
             onLogin(session)
         }
@@ -47,7 +47,7 @@ object AccountService {
 //        player.save() TODO
 
         onLogin(session)
-        session.send(BasePacket(PacketOpcodes.SetPlayerBornDataRsp, null))
+        session.send(BasePacket(null, opcode=PacketOpcodes.SetPlayerBornDataRsp))
         // TODO welcome mail
     }
 

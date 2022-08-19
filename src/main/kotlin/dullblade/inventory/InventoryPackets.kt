@@ -5,12 +5,11 @@ import dullblade.Equip
 import dullblade.Material
 import dullblade.Weapon
 import dullblade.game.ActionReason
-import dullblade.game.PacketOpcodes
 import dullblade.game.PlayerProperty
 import dullblade.inventory.InventoryMessages.*
 
 class PacketStoreItemChangeNotify(data: StoreItemChangeNotify)
-    : BasePacket(PacketOpcodes.StoreItemChangeNotify, data) {
+    : BasePacket(data) {
     constructor(material: Material) : this(storeItemChangeNotify {
         storeType = StoreType.PACK
         itemList.add(item {
@@ -52,14 +51,13 @@ fun itemRelic(relic: Relic) = item {
 }
 
 class PacketStoreItemDelNotify(guid: Long)
-    : BasePacket(PacketOpcodes.StoreItemDelNotify,
-        storeItemDelNotify {
+    : BasePacket(storeItemDelNotify {
             storeType = StoreType.PACK
             guidList.add(guid)
         })
 
 class PacketWeaponPromoteRsp(data: WeaponPromoteRsp)
-    : BasePacket(PacketOpcodes.WeaponPromoteRsp, data) {
+    : BasePacket(data) {
     constructor(weapon: Weapon, oldLevel: Int) : this(
         weaponPromoteRsp {
             targetWeaponGuid = weapon.guid
@@ -71,8 +69,7 @@ class PacketWeaponPromoteRsp(data: WeaponPromoteRsp)
 
 class PacketCalcWeaponUpgradeReturnItemsRsp(
     itemGuid: Long, returnItems: List<Pair<Int, Int>>
-) : BasePacket(PacketOpcodes.CalcWeaponUpgradeReturnItemsRsp,
-    calcWeaponUpgradeReturnItemsRsp {
+) : BasePacket(calcWeaponUpgradeReturnItemsRsp {
         if (returnItems.isEmpty()) {
             retcode = PacketMessages.Retcode.RET_SVR_ERROR_VALUE
         } else {
@@ -84,7 +81,7 @@ class PacketCalcWeaponUpgradeReturnItemsRsp(
     })
 
 class PacketWeaponUpgradeRsp(data: WeaponUpgradeRsp)
-    : BasePacket(PacketOpcodes.WeaponUpgradeRsp, data) {
+    : BasePacket(data) {
     constructor(weapon: Weapon, oldLevel: Int, leftoverOres: List<Pair<Int, Int>>) : this(
         weaponUpgradeRsp {
             targetWeaponGuid = weapon.guid
@@ -98,7 +95,7 @@ class PacketWeaponUpgradeRsp(data: WeaponUpgradeRsp)
 }
 
 class PacketWeaponAwakenRsp(weapon: Weapon, oldRefineLevel: Int)
-    : BasePacket(PacketOpcodes.WeaponAwakenRsp, weaponAwakenRsp {
+    : BasePacket(weaponAwakenRsp {
     targetWeaponGuid = weapon.guid
     targetWeaponAwakenLevel = weapon.refinement
     avatarGuid = weapon.equipCharacterId
@@ -109,19 +106,19 @@ class PacketWeaponAwakenRsp(weapon: Weapon, oldRefineLevel: Int)
 })
 
 class PacketItemAddHintNotify(itemId: Int, count: Int, reason: ActionReason)
-    : BasePacket(PacketOpcodes.ItemAddHintNotify, itemAddHintNotify {
+    : BasePacket(itemAddHintNotify {
     itemList.add(itemHint { this.itemId = itemId; this.count = count })
     this.reason = reason.value
 })
 
 class PacketSetEquipLockStateRsp(locked: Boolean, guid: Long)
-    : BasePacket(PacketOpcodes.SetEquipLockStateRsp, setEquipLockStateRsp {
+    : BasePacket(setEquipLockStateRsp {
     isLocked = locked
     targetEquipGuid = guid
 }, buildHeader())
 
 class PacketReliquaryUpgradeRsp(relic: Relic, rate: Int, oldLevel: Int, oldAppendPropIdList: List<Int>)
-    : BasePacket(PacketOpcodes.ReliquaryUpgradeRsp, reliquaryUpgradeRsp {
+    : BasePacket(reliquaryUpgradeRsp {
         targetReliquaryGuid = relic.guid
         this.oldLevel = oldLevel
         curLevel = relic.level
@@ -131,7 +128,7 @@ class PacketReliquaryUpgradeRsp(relic: Relic, rate: Int, oldLevel: Int, oldAppen
 })
 
 class PacketProudSkillChangeNotify(avatar: Avatar)
-    : BasePacket(PacketOpcodes.ProudSkillChangeNotify, proudSkillChangeNotify {
+    : BasePacket(proudSkillChangeNotify {
     avatarGuid = avatar.guid
 //    entityId = avatar.entityId // TODO
     skillDepotId = avatar.skillDepotId
@@ -139,7 +136,7 @@ class PacketProudSkillChangeNotify(avatar: Avatar)
 })
 
 class PacketAvatarPropNotify(avatar: Avatar)
-    : BasePacket(PacketOpcodes.AvatarPropNotify, avatarPropNotify {
+    : BasePacket(avatarPropNotify {
     avatarGuid = avatar.guid
     propMap[PlayerProperty.PROP_LEVEL.id] = avatar.level.toLong()
     propMap[PlayerProperty.PROP_EXP.id] = avatar.exp.toLong()
@@ -149,14 +146,13 @@ class PacketAvatarPropNotify(avatar: Avatar)
 })
 
 class PacketAvatarPromoteRsp(avatar: Avatar)
-    : BasePacket(PacketOpcodes.AvatarPromoteRsp,
-    avatarPromoteRsp { guid = avatar.guid })
+    : BasePacket(avatarPromoteRsp { guid = avatar.guid })
 
 class PacketAvatarUpgradeRsp(
     avatar: Avatar,
     oldLevel: Int,
     oldFightPropMap: Map<Int, Float>
-) : BasePacket(PacketOpcodes.AvatarUpgradeRsp, avatarUpgradeRsp {
+) : BasePacket(avatarUpgradeRsp {
     avatarGuid = avatar.guid
     this.oldLevel = oldLevel
     curLevel = avatar.level
@@ -166,7 +162,7 @@ class PacketAvatarUpgradeRsp(
 
 class PacketAvatarSkillChangeNotify(
     avatar: Avatar, skillId: Int, oldLevel: Int, curLevel: Int
-) : BasePacket(PacketOpcodes.AvatarSkillChangeNotify, avatarSkillChangeNotify {
+) : BasePacket(avatarSkillChangeNotify {
     avatarGuid = avatar.guid
 //    entityId = avatar.entityId // TODO
     skillDepotId = avatar.skillDepotId
@@ -177,7 +173,7 @@ class PacketAvatarSkillChangeNotify(
 
 class PacketAvatarSkillUpgradeRsp(
     avatar: Avatar, skillId: Int, oldLevel: Int, curLevel: Int
-) : BasePacket(PacketOpcodes.AvatarSkillUpgradeRsp, avatarSkillUpgradeRsp {
+) : BasePacket(avatarSkillUpgradeRsp {
     avatarGuid = avatar.guid
     avatarSkillId = skillId
     this.oldLevel = oldLevel
@@ -185,7 +181,7 @@ class PacketAvatarSkillUpgradeRsp(
 })
 
 class PacketAvatarUnlockTalentNotify(avatar: Avatar, talentId: Int) :
-    BasePacket(PacketOpcodes.AvatarUnlockTalentNotify, avatarUnlockTalentNotify {
+    BasePacket(avatarUnlockTalentNotify {
     avatarGuid = avatar.guid
 //    entityId = avatar.entityId // TODO
     this.talentId = talentId
@@ -193,12 +189,11 @@ class PacketAvatarUnlockTalentNotify(avatar: Avatar, talentId: Int) :
 })
 
 class PacketUnlockAvatarTalentRsp(avatar: Avatar, talentId: Int)
-    : BasePacket(PacketOpcodes.UnlockAvatarTalentRsp,
-    unlockAvatarTalentRsp { avatarGuid = avatar.guid; this.talentId = talentId })
+    : BasePacket(unlockAvatarTalentRsp { avatarGuid = avatar.guid; this.talentId = talentId })
 
 class PacketProudSkillExtraLevelNotify(
     avatar: Avatar, talentIndex: Int
-) : BasePacket(PacketOpcodes.ProudSkillExtraLevelNotify, proudSkillExtraLevelNotify {
+) : BasePacket(proudSkillExtraLevelNotify {
     avatarGuid = avatar.guid
     talentType = 3 // Talent type = 3 "AvatarSkill"
     this.talentIndex = talentIndex
@@ -207,7 +202,7 @@ class PacketProudSkillExtraLevelNotify(
 
 class PacketAvatarSkillMaxChargeCountNotify(
     avatar: Avatar, skillId: Int, maxCharges: Int
-) : BasePacket(PacketOpcodes.AvatarSkillMaxChargeCountNotify, avatarSkillMaxChargeCountNotify {
+) : BasePacket(avatarSkillMaxChargeCountNotify {
     avatarGuid = avatar.guid
     this.skillId = skillId
     maxChargeCount = maxCharges
@@ -222,12 +217,11 @@ fun toFetterProto(avatar: Avatar) = avatarFetterInfo {
 }
 
 class PacketAvatarFetterDataNotify(avatar: Avatar)
-    : BasePacket(PacketOpcodes.AvatarFetterDataNotify,
-        avatarFetterDataNotify {
+    : BasePacket(avatarFetterDataNotify {
             fetterInfoMap[avatar.guid] = toFetterProto(avatar) })
 
 class PacketStoreWeightLimitNotify
-    : BasePacket(PacketOpcodes.StoreWeightLimitNotify, storeWeightLimitNotify {
+    : BasePacket(storeWeightLimitNotify {
     storeType = StoreType.PACK
     weightLimit = InventoryService.LIMIT_ALL
     weaponCountLimit = InventoryService.LIMIT_WEAPONS
@@ -237,7 +231,7 @@ class PacketStoreWeightLimitNotify
 })
 
 class PacketPlayerStoreNotify(inventory: Inventory)
-    : BasePacket(PacketOpcodes.PlayerStoreNotify, playerStoreNotify {
+    : BasePacket(playerStoreNotify {
     storeType = StoreType.PACK
     weightLimit = InventoryService.LIMIT_ALL
     itemList.addAll(inventory.weapons.map { itemWeapon(it.value) })
@@ -254,7 +248,7 @@ class PacketPlayerStoreNotify(inventory: Inventory)
     } })
 })
 
-class PacketUseItemRsp(useItem: Material?) : BasePacket(PacketOpcodes.UseItemRsp, useItemRsp {
+class PacketUseItemRsp(useItem: Material?) : BasePacket(useItemRsp {
     if (useItem != null) {
         itemId = useItem.id
         guid = useItem.guid
@@ -263,7 +257,7 @@ class PacketUseItemRsp(useItem: Material?) : BasePacket(PacketOpcodes.UseItemRsp
 })
 
 class PacketDestroyMaterialRsp(returnMaterial: List<CostItem>)
-    : BasePacket(PacketOpcodes.DestroyMaterialRsp, destroyMaterialRsp {
+    : BasePacket(destroyMaterialRsp {
     returnMaterial.forEach { ret ->
         itemIdList.add(ret.id)
         itemCountList.add(ret.count)
@@ -271,21 +265,19 @@ class PacketDestroyMaterialRsp(returnMaterial: List<CostItem>)
 })
 
 class PacketForgeFormulaDataNotify(itemId: Int)
-    : BasePacket(PacketOpcodes.ForgeFormulaDataNotify,
-        forgeFormulaDataNotify {
+    : BasePacket(forgeFormulaDataNotify {
             forgeId = itemId
             isLocked = false
         })
 
 class PacketCombineFormulaDataNotify(itemId: Int)
-    : BasePacket(PacketOpcodes.CombineFormulaDataNotify,
-        combineFormulaDataNotify {
+    : BasePacket(combineFormulaDataNotify {
             combineId = itemId
             isLocked = false
         })
 
 class PacketCombineRsp(req: CombineReq, result: List<CostItem>)
-    : BasePacket(PacketOpcodes.CombineRsp, combineRsp {
+    : BasePacket(combineRsp {
     retcode = PacketMessages.Retcode.RET_SUCC_VALUE
     combineId = req.combineId
     combineCount = req.combineCount
@@ -295,20 +287,18 @@ class PacketCombineRsp(req: CombineReq, result: List<CostItem>)
     })
 })
 
-class PacketCombineDataNotify(unlockedCombines: Set<Int>) : BasePacket(PacketOpcodes.CombineDataNotify, combineDataNotify {
+class PacketCombineDataNotify(unlockedCombines: Set<Int>) : BasePacket(combineDataNotify {
     combineIdList.addAll(unlockedCombines)
 })
 
 class PacketUnlockedFurnitureFormulaDataNotify(unlocks: Set<Int>) :
-    BasePacket(PacketOpcodes.UnlockedFurnitureFormulaDataNotify,
-        unlockedFurnitureFormulaDataNotify {
+    BasePacket(unlockedFurnitureFormulaDataNotify {
             furnitureIdList.addAll(unlocks)
             isAll = true
         })
 
 class PacketUnlockedFurnitureSuiteDataNotify(unlocks: Set<Int>) :
-    BasePacket(PacketOpcodes.UnlockedFurnitureSuiteDataNotify,
-        unlockedFurnitureSuiteDataNotify {
+    BasePacket(unlockedFurnitureSuiteDataNotify {
             furnitureSuiteIdList.addAll(unlocks)
             isAll = true
         })

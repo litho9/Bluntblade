@@ -9,7 +9,7 @@ class PacketGadgetInteractRsp(
     gadget: EntityBaseGadget,
     interact: GadgetInteractRsp.InteractType,
     opType: InterOpType? = null
-) : BasePacket(PacketOpcodes.GadgetInteractRsp, proto(gadget, interact, opType)) {
+) : BasePacket(proto(gadget, interact, opType)) {
     companion object {
         fun proto(
             gadget: EntityBaseGadget,

@@ -3,7 +3,6 @@ package dullblade.inventory
 import dullblade.Account
 import dullblade.Avatar
 import dullblade.BasePacket
-import dullblade.game.PacketOpcodes
 import dullblade.game.PlayerProperty
 import dullblade.game.Stat
 
@@ -43,7 +42,7 @@ fun toProto(avatar: Avatar) = avatarInfo {
 }
 
 class PacketAvatarDataNotify(account: Account)
-    : BasePacket(PacketOpcodes.AvatarDataNotify, avatarDataNotify {
+    : BasePacket(avatarDataNotify {
     curAvatarTeamId = account.curTeamIdx
     chooseAvatarGuid = account.curTeam()[0] // TODO
     ownedFlycloakList.addAll(account.flyCloaks)
@@ -57,22 +56,19 @@ class PacketAvatarDataNotify(account: Account)
 
 class PacketAvatarFightPropNotify(
     guid: Long, props: Map<Int, Float>
-) : BasePacket(PacketOpcodes.AvatarFightPropNotify,
-    avatarFightPropNotify {
+) : BasePacket(avatarFightPropNotify {
         avatarGuid = guid
         fightPropMap.putAll(props)
     })
 
 class PacketAvatarFightPropUpdateNotify(avatar: Avatar, stat: Stat)
-    : BasePacket(PacketOpcodes.AvatarFightPropUpdateNotify,
-    avatarFightPropUpdateNotify {
+    : BasePacket(avatarFightPropUpdateNotify {
     avatarGuid = avatar.guid
     fightPropMap.put(stat.id, avatar.prop(stat))
 })
 
 class PacketAvatarLifeStateChangeNotify(avatar: Avatar, lifeState: Int)
-    : BasePacket(PacketOpcodes.AvatarLifeStateChangeNotify,
-    avatarLifeStateChangeNotify {
+    : BasePacket(avatarLifeStateChangeNotify {
     avatarGuid = avatar.guid
     this.lifeState = lifeState
 })
