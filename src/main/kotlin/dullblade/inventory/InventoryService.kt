@@ -16,8 +16,11 @@ object InventoryService {
         val equip = inv.weapons[req.targetEquipGuid] ?: inv.relics[req.targetEquipGuid]!!
         equip.locked = req.isLocked
 //        equip.save()
-        session.send(PacketStoreItemChangeNotify(equip),
-            PacketSetEquipLockStateRsp(equip.locked, equip.guid))
+        session.send(PacketStoreItemChangeNotify(equip))
+        session.send(setEquipLockStateRsp {
+            isLocked = equip.locked
+            targetEquipGuid = equip.guid
+        }, BasePacket.buildHeader())
     }
 
     fun promoteWeapon(session: GameSession, req: WeaponPromoteReq) {
@@ -27,12 +30,16 @@ object InventoryService {
         val data = weaponData[weapon.id]!!
         val nextPromoteData = weaponPromoteData[data.promoteId]!![weapon.promoteLevel]
         pay(session, nextPromoteData.costItems, nextPromoteData.costCoin)
-        val oldPromoteLevel = weapon.promoteLevel++
+        val oldLevel = weapon.promoteLevel++
 //        db.save(weapon)
         AvatarService.recalcStats(session, weapon.equipCharacterId)
 
-        session.send(PacketStoreItemChangeNotify(weapon),
-            PacketWeaponPromoteRsp(weapon, oldPromoteLevel))
+        session.send(PacketStoreItemChangeNotify(weapon))
+        session.send(weaponPromoteRsp {
+            targetWeaponGuid = weapon.guid
+            curPromoteLevel = weapon.promoteLevel
+            oldPromoteLevel = oldLevel
+        })
     }
 
     fun calcWeaponUpgradeLeftovers(session: GameSession, req: CalcWeaponUpgradeReturnItemsReq) {
@@ -46,7 +53,16 @@ object InventoryService {
         val weapon = weapons[req.targetWeaponGuid]!!
         val leftoverExp = weapon.totalExp + expGain - unlockExpFor(weapon)
         val leftovers: List<Pair<Int, Int>> = getLeftoverOres(leftoverExp)
-        session.send(PacketCalcWeaponUpgradeReturnItemsRsp(req.targetWeaponGuid, leftovers))
+        session.send(calcWeaponUpgradeReturnItemsRsp {
+            if (leftovers.isEmpty()) {
+                retcode = PacketMessages.Retcode.RET_SVR_ERROR_VALUE
+            } else {
+                targetWeaponGuid = req.targetWeaponGuid
+                itemParamList.addAll(leftovers.map {
+                    itemParam { itemId = it.first; count = it.second }
+                })
+            }
+        })
     }
 
     fun upgradeWeapon(session: GameSession, req: WeaponUpgradeReq) {
@@ -79,8 +95,15 @@ object InventoryService {
         if (oldLevel != weapon.level)
             AvatarService.recalcStats(session, weapon.equipCharacterId)
 
-        session.send(PacketStoreItemChangeNotify(weapon),
-            PacketWeaponUpgradeRsp(weapon, oldLevel, leftovers))
+        session.send(PacketStoreItemChangeNotify(weapon))
+        session.send(weaponUpgradeRsp {
+            targetWeaponGuid = weapon.guid
+            curLevel = weapon.level
+            this.oldLevel = oldLevel
+            itemParamList.addAll(leftovers.map {
+                itemParam { itemId = it.first; count = it.second }
+            })
+        })
     }
 
     fun refineWeapon(session: GameSession, req: WeaponAwakenReq) {
@@ -104,8 +127,16 @@ object InventoryService {
 
         AvatarService.recalcStats(session, weapon.equipCharacterId)
 
-        session.send(PacketStoreItemChangeNotify(weapon),
-            PacketWeaponAwakenRsp(weapon, oldRefineLevel))
+        session.send(PacketStoreItemChangeNotify(weapon))
+        session.send(weaponAwakenRsp {
+            targetWeaponGuid = weapon.guid
+            targetWeaponAwakenLevel = weapon.refinement
+            avatarGuid = weapon.equipCharacterId
+            weaponData[weapon.id]!!.skillAffixes.forEach {
+                oldAffixLevelMap[it] = oldRefineLevel
+                curAffixLevelMap[it] = weapon.refinement
+            }
+        })
     }
 
     fun upgradeRelic(session: GameSession, req: ReliquaryUpgradeReq) {
@@ -138,8 +169,15 @@ object InventoryService {
         if (oldLevel != relic.level)
             AvatarService.recalcStats(session, relic.equipCharacterId)
 
-        session.send(PacketStoreItemChangeNotify(relic),
-            PacketReliquaryUpgradeRsp(relic, rate, oldLevel, oldAppendPropIdList))
+        session.send(PacketStoreItemChangeNotify(relic))
+        session.send(reliquaryUpgradeRsp {
+            targetReliquaryGuid = relic.guid
+            this.oldLevel = oldLevel
+            curLevel = relic.level
+            powerUpRate = rate
+            oldAppendPropList.addAll(oldAppendPropIdList)
+            curAppendPropList.addAll(relic.appendPropIdList)
+        })
     }
 
     private fun unlockExpFor(weapon: Weapon): Int {
@@ -208,27 +246,39 @@ object InventoryService {
             session.account.inventory.materials.remove(material.id)
             session.send(PacketStoreItemDelNotify(material.guid))
             session.account.unlockedForgingBlueprints.add(forgeId)
-            session.send(PacketForgeFormulaDataNotify(forgeId))
+            session.send(forgeFormulaDataNotify {
+                this.forgeId = forgeId
+                isLocked = false
+            })
             useSuccess = true
         } else if (data?.type == MaterialType.MATERIAL_CONSUME && data.itemUse[0].op == "ITEM_USE_UNLOCK_COMBINE") {
             val combineId = data.itemUse[0].params[0].toInt()
             session.account.inventory.materials.remove(material.id)
             session.send(PacketStoreItemDelNotify(material.guid))
             session.account.unlockedCombines.add(combineId)
-            session.send(PacketCombineFormulaDataNotify(combineId))
+            session.send(combineFormulaDataNotify {
+                this.combineId = combineId
+                isLocked = false
+            })
             useSuccess = true
         } else if (data?.type == MaterialType.MATERIAL_FURNITURE_FORMULA) {
             val fId = data.itemUse[0].params[0].toInt()
             session.account.inventory.materials.remove(material.id)
             session.send(PacketStoreItemDelNotify(material.guid))
             session.account.unlockedFurniture.add(fId)
-            session.send(PacketUnlockedFurnitureFormulaDataNotify(session.account.unlockedFurniture))
+            session.send(unlockedFurnitureFormulaDataNotify {
+                furnitureIdList.addAll(session.account.unlockedFurniture)
+                isAll = true
+            })
             useSuccess = true
         } else if (data?.type == MaterialType.MATERIAL_FURNITURE_SUITE_FORMULA) {
             val fId = data.itemUse[0].params[0].toInt()
             session.account.inventory.materials.remove(material.id)
             session.account.unlockedFurnitureSuites.add(fId)
-            session.send(PacketUnlockedFurnitureSuiteDataNotify(session.account.unlockedFurnitureSuites))
+            session.send(unlockedFurnitureSuiteDataNotify {
+                furnitureSuiteIdList.addAll(session.account.unlockedFurnitureSuites)
+                isAll = true
+            })
             useSuccess = true
         } else if (material.id == RESIN_FRAGILE || material.id == RESIN_TRANSIENT) {
             materialAdd(session, RESIN_ID, 60 * req.count)
@@ -245,7 +295,13 @@ object InventoryService {
         // TODO MATERIAL_CHEST MATERIAL_CHEST_BATCH_USE
 
         if (used > 0) pay(session, listOf(CostItem(material.id, 1)), count=used)
-        session.send(PacketUseItemRsp(if (used > 0 || useSuccess) material else null))
+        session.send(useItemRsp {
+            if (used > 0 || useSuccess) {
+                itemId = material.id
+                guid = material.guid
+            } else
+                retcode = PacketMessages.Retcode.RET_SVR_ERROR_VALUE
+        })
     }
 
     fun materialDestroy(session: GameSession, req: DestroyMaterialReq) {
@@ -258,16 +314,29 @@ object InventoryService {
         pay(session, costs, 0)
         val returnMaterial = costs.flatMap { destroyMaterialsFor(it.id) }
 //        materialAdd(returnMaterial) TODO
-        session.send(PacketDestroyMaterialRsp(returnMaterial))
+        session.send(destroyMaterialRsp {
+            returnMaterial.forEach { ret ->
+                itemIdList.add(ret.id)
+                itemCountList.add(ret.count)
+            }
+        })
     }
 
     fun materialCombine(session: GameSession, req: CombineReq) { // combine through alchemy
         val data = combineData[req.combineId]!!
         pay(session, data.materials, data.moraCost, req.combineCount)
         materialAdd(session, data.resultItemId, data.resultItemCount)
-        val result = listOf(CostItem(data.resultItemId, data.resultItemCount * req.combineCount))
         // TODO lucky characters
-        session.send(PacketCombineRsp(req, result))
+        session.send(combineRsp {
+            retcode = PacketMessages.Retcode.RET_SUCC_VALUE
+            combineId = req.combineId
+            combineCount = req.combineCount
+            avatarGuid = req.avatarGuid
+            resultItemList.add(itemParam {
+                itemId = data.resultItemId
+                count = data.resultItemCount * req.combineCount
+            })
+        })
     }
 
     const val LIMIT_WEAPONS = 2000

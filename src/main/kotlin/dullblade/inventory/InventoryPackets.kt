@@ -56,75 +56,10 @@ class PacketStoreItemDelNotify(guid: Long)
             guidList.add(guid)
         })
 
-class PacketWeaponPromoteRsp(data: WeaponPromoteRsp)
-    : BasePacket(data) {
-    constructor(weapon: Weapon, oldLevel: Int) : this(
-        weaponPromoteRsp {
-            targetWeaponGuid = weapon.guid
-            curPromoteLevel = weapon.promoteLevel
-            oldPromoteLevel = oldLevel
-        }
-    )
-}
-
-class PacketCalcWeaponUpgradeReturnItemsRsp(
-    itemGuid: Long, returnItems: List<Pair<Int, Int>>
-) : BasePacket(calcWeaponUpgradeReturnItemsRsp {
-        if (returnItems.isEmpty()) {
-            retcode = PacketMessages.Retcode.RET_SVR_ERROR_VALUE
-        } else {
-            targetWeaponGuid = itemGuid
-            itemParamList.addAll(returnItems.map {
-                itemParam { itemId = it.first; count = it.second }
-            })
-        }
-    })
-
-class PacketWeaponUpgradeRsp(data: WeaponUpgradeRsp)
-    : BasePacket(data) {
-    constructor(weapon: Weapon, oldLevel: Int, leftoverOres: List<Pair<Int, Int>>) : this(
-        weaponUpgradeRsp {
-            targetWeaponGuid = weapon.guid
-            curLevel = weapon.level
-            this.oldLevel = oldLevel
-            itemParamList.addAll(leftoverOres.map {
-                itemParam { itemId = it.first; count = it.second }
-            })
-        }
-    )
-}
-
-class PacketWeaponAwakenRsp(weapon: Weapon, oldRefineLevel: Int)
-    : BasePacket(weaponAwakenRsp {
-    targetWeaponGuid = weapon.guid
-    targetWeaponAwakenLevel = weapon.refinement
-    avatarGuid = weapon.equipCharacterId
-    weaponData[weapon.id]!!.skillAffixes.forEach {
-        oldAffixLevelMap[it] = oldRefineLevel
-        curAffixLevelMap[it] = weapon.refinement
-    }
-})
-
 class PacketItemAddHintNotify(itemId: Int, count: Int, reason: ActionReason)
     : BasePacket(itemAddHintNotify {
     itemList.add(itemHint { this.itemId = itemId; this.count = count })
     this.reason = reason.value
-})
-
-class PacketSetEquipLockStateRsp(locked: Boolean, guid: Long)
-    : BasePacket(setEquipLockStateRsp {
-    isLocked = locked
-    targetEquipGuid = guid
-}, buildHeader())
-
-class PacketReliquaryUpgradeRsp(relic: Relic, rate: Int, oldLevel: Int, oldAppendPropIdList: List<Int>)
-    : BasePacket(reliquaryUpgradeRsp {
-        targetReliquaryGuid = relic.guid
-        this.oldLevel = oldLevel
-        curLevel = relic.level
-        powerUpRate = rate
-        oldAppendPropList.addAll(oldAppendPropIdList)
-        curAppendPropList.addAll(relic.appendPropIdList)
 })
 
 class PacketProudSkillChangeNotify(avatar: Avatar)
@@ -200,14 +135,6 @@ class PacketProudSkillExtraLevelNotify(
     extraLevel = 3
 })
 
-class PacketAvatarSkillMaxChargeCountNotify(
-    avatar: Avatar, skillId: Int, maxCharges: Int
-) : BasePacket(avatarSkillMaxChargeCountNotify {
-    avatarGuid = avatar.guid
-    this.skillId = skillId
-    maxChargeCount = maxCharges
-})
-
 fun toFetterProto(avatar: Avatar) = avatarFetterInfo {
     expLevel = totalFetterExpData.indexOfFirst { it > avatar.fetterTotalExp }
     expNumber = avatar.fetterTotalExp - totalFetterExpData[expLevel - 1]
@@ -248,57 +175,6 @@ class PacketPlayerStoreNotify(inventory: Inventory)
     } })
 })
 
-class PacketUseItemRsp(useItem: Material?) : BasePacket(useItemRsp {
-    if (useItem != null) {
-        itemId = useItem.id
-        guid = useItem.guid
-    } else
-        retcode = PacketMessages.Retcode.RET_SVR_ERROR_VALUE
-})
-
-class PacketDestroyMaterialRsp(returnMaterial: List<CostItem>)
-    : BasePacket(destroyMaterialRsp {
-    returnMaterial.forEach { ret ->
-        itemIdList.add(ret.id)
-        itemCountList.add(ret.count)
-    }
-})
-
-class PacketForgeFormulaDataNotify(itemId: Int)
-    : BasePacket(forgeFormulaDataNotify {
-            forgeId = itemId
-            isLocked = false
-        })
-
-class PacketCombineFormulaDataNotify(itemId: Int)
-    : BasePacket(combineFormulaDataNotify {
-            combineId = itemId
-            isLocked = false
-        })
-
-class PacketCombineRsp(req: CombineReq, result: List<CostItem>)
-    : BasePacket(combineRsp {
-    retcode = PacketMessages.Retcode.RET_SUCC_VALUE
-    combineId = req.combineId
-    combineCount = req.combineCount
-    avatarGuid = req.avatarGuid
-    resultItemList.addAll(result.map {
-        itemParam { itemId = it.id; count = it.count }
-    })
-})
-
 class PacketCombineDataNotify(unlockedCombines: Set<Int>) : BasePacket(combineDataNotify {
     combineIdList.addAll(unlockedCombines)
 })
-
-class PacketUnlockedFurnitureFormulaDataNotify(unlocks: Set<Int>) :
-    BasePacket(unlockedFurnitureFormulaDataNotify {
-            furnitureIdList.addAll(unlocks)
-            isAll = true
-        })
-
-class PacketUnlockedFurnitureSuiteDataNotify(unlocks: Set<Int>) :
-    BasePacket(unlockedFurnitureSuiteDataNotify {
-            furnitureSuiteIdList.addAll(unlocks)
-            isAll = true
-        })

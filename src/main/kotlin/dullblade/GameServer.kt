@@ -68,18 +68,18 @@ abstract class GameSession {
     var lastClientSeq = 10
 
     abstract fun send(vararg packets: BasePacket)
+    abstract fun send(
+        data: GeneratedMessageV3?,
+        header: ByteArray = ByteArray(0),
+        encryption: ByteArray? = null, // null | Crypto.DISPATCH_KEY | Crypto.ENCRYPT_KEY
+        opcode: PacketOpcodes = PacketOpcodes.valueOf(data!!.javaClass.simpleName)
+    )
     open fun getHostAddress(): String = "0.0.0.0"
 }
 
 class GameSessionKcp(val ukcp: Ukcp): GameSession() {
     override fun getHostAddress(): String =
         ukcp.user().remoteAddress.address.hostAddress
-
-    private fun writeData(bytes: ByteArray) {
-        val buf = Unpooled.wrappedBuffer(bytes)
-        ukcp.write(buf)
-        buf.release()
-    }
 
 //    val srtt: Int
 //        get() = ukcp.srtt()
@@ -121,29 +121,36 @@ class GameSessionKcp(val ukcp: Ukcp): GameSession() {
     }
 
     override fun send(vararg packets: BasePacket) {
-        for (packet in packets) {
-            // DO NOT REMOVE (unless we find a way to validate code before
-            // sending to client which I don't think we can)
-            // Stop WindSeedClientNotify from being sent for security purposes.
-            if (PacketOpcodes.BANNED_PACKETS.contains(packet.opcode)) continue
-
-            logger.trace("SEND: ${packet.opcode.name} (${packet.opcode}): ${packet.data}")
-            writeData(build(packet))
-        }
+        for (packet in packets)
+            send(packet.data, packet.header, packet.encryption, packet.opcode)
     }
 
-    private fun build(packet: BasePacket): ByteArray {
-        val bytes = packet.data?.toByteArray() ?: ByteArray(0)
-        val baos = ByteArrayOutputStream(2 + 2 + 2 + 4 + packet.header.size + bytes.size + 2)
+    override fun send(
+        data: GeneratedMessageV3?,
+        header: ByteArray,
+        encryption: ByteArray?,
+        opcode: PacketOpcodes
+    ) {
+        // DO NOT REMOVE (unless we find a way to validate code before
+        // sending to client which I don't think we can)
+        // Stop WindSeedClientNotify from being sent for security purposes.
+        if (PacketOpcodes.BANNED_PACKETS.contains(opcode)) return
+
+        logger.trace("SEND: ${opcode.name} ($opcode): $data")
+
+        val bytes = data?.toByteArray() ?: ByteArray(0)
+        val baos = ByteArrayOutputStream(2 + 2 + 2 + 4 + header.size + bytes.size + 2)
         writeUint16(baos, const1)
-        writeUint16(baos, packet.opcode.code)
-        writeUint16(baos, packet.header.size)
+        writeUint16(baos, opcode.code)
+        writeUint16(baos, header.size)
         writeUint32(baos, bytes.size)
-        baos.write(packet.header)
+        baos.write(header)
         baos.write(bytes)
         writeUint16(baos, const2)
         val packet0 = baos.toByteArray()
-        return if (packet.encryption == null) packet0 else xor(packet0, packet.encryption!!)
+        val buf = Unpooled.wrappedBuffer(if (encryption == null) packet0 else xor(packet0, encryption))
+        ukcp.write(buf)
+        buf.release()
     }
 
     private fun writeUint16(baos: ByteArrayOutputStream, i: Int) {

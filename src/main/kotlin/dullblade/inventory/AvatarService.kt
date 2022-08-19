@@ -89,7 +89,11 @@ object AvatarService {
             if (it is AvatarTalentDataCharge) {
                 // Check if new constellation adds skill charges
                 avatar.skillExtraCharges[it.skillID] = it.pointDelta
-                session.send(PacketAvatarSkillMaxChargeCountNotify(avatar, it.skillID, it.pointDelta))
+                session.send(avatarSkillMaxChargeCountNotify {
+                    avatarGuid = avatar.guid
+                    skillId = it.skillID
+                    maxChargeCount = it.pointDelta
+                })
             } else if (it is AvatarTalentDataProud) {
                 // Check if new constellation adds +3 to a skill level
                 val proudSkillGroupId = avatar.promoteId * 100 + 30 + it.talentIndex
