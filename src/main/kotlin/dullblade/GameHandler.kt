@@ -2,6 +2,7 @@ package dullblade
 
 import dullblade.game.PropMap
 import dullblade.game.Stat
+import dullblade.inventory.AvatarService
 import kotlinx.serialization.Serializable
 
 fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
@@ -28,11 +29,13 @@ data class Account(
     val login: String,
     val token: String,
     val regionId: Int = 3,
+    var mainCharacterId: Int = 10000007,
 
     // profile
     var nickname: String = "temp",
     var headImage: Int = 10000007,
-    var mainCharacterId: Int = 10000007,
+    var nameCardId: Int = 10000007, // TODO
+    var signature: String = "",
 
     val inventory: Inventory = Inventory(),
     val avatars: MutableMap<Long, Avatar> = HashMap(),
@@ -46,7 +49,8 @@ data class Account(
     val flyCloaks: Set<Int> = setOf(),
     val costumes: Set<Int> = setOf(),
 
-    val level: Int = 1,
+    val level: Int = 1, // AR
+    val worldLevel: Int = 1,
     val forgeQueues: MutableList<ForgeQueue> = ArrayList(),
     val unlockedForgingBlueprints: MutableSet<Int> = HashSet(),
     val unlockedCombines: MutableSet<Int> = HashSet(),
@@ -83,7 +87,7 @@ data class Weapon(
     var promoteLevel: Int = 0,
     var refinement: Int = 0, // 0..4
     val affixIds: MutableList<Int> = mutableListOf()
-) : Equip(1, /*data.rank > 3 TODO */)
+) : Equip(1 /*data.rank > 3 TODO */)
 
 @Serializable
 data class Relic(
@@ -119,6 +123,7 @@ class Avatar(
     val costumeId: Int = 0,
     val proudSkillIds: MutableList<Int> = mutableListOf(),
     val fightProperties: MutableMap<Int, Float> = mutableMapOf(),
+    val extraAbilityEmbryos: MutableSet<String> = HashSet(),
     val skillLevels: MutableMap<Int, Int> = mutableMapOf(),
     val constellations: MutableList<Int> = mutableListOf(),
     val skillExtraCharges: MutableMap<Int, Int> = mutableMapOf(),
@@ -127,3 +132,18 @@ class Avatar(
     fun prop(stat: Stat) = fightProperties[stat.id] ?: 0f
     fun prop(stat: Stat, value: Float) { fightProperties[stat.id] = value }
 }
+
+abstract class GameEntity(
+    var lastMoveSceneTimeMs: Int = 0,
+    val lastMoveReliableSeq: Int = 0
+)
+class EntityWeapon(
+    val id: Int,
+    val weapon: Weapon,
+) : GameEntity()
+class EntityAvatar(
+    val id: Int,
+    val avatar: Avatar,
+    val wield: EntityWeapon,
+    val lifeState: AvatarService.LifeState,
+) : GameEntity()

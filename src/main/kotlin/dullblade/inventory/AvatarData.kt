@@ -3,6 +3,7 @@ package dullblade.inventory
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
+import java.util.regex.Pattern
 
 @Serializable
 data class PropGrowCurvesData(val Type: String, val GrowCurve: String)
@@ -11,6 +12,7 @@ data class AvatarData(
     @SerialName("Id") val id: Int,
     @SerialName("AvatarPromoteId") val promoteId: Int,
     @SerialName("SkillDepotId") val skillDepotId: Int,
+    @SerialName("IconName") val iconName: String,
     val HpBase: Float,
     val AttackBase: Float,
     val DefenseBase: Float,
@@ -47,7 +49,8 @@ data class AvatarSkillDepot(
     @SerialName("EnergySkill") val burstId: Int,
     @SerialName("Skills") val skillIds: List<Int>,
     @SerialName("EnergySkill") val energySkill: Int,
-    val InherentProudSkillOpens: List<InherentProudSkillOpens>
+    val InherentProudSkillOpens: List<InherentProudSkillOpens>,
+    @SerialName("SkillDepotAbilityGroup") val abilityGroup: String, // only for MC
 )
 val avatarSkillDepotData by lazy {
     resource<List<AvatarSkillDepot>>("./ExcelBinOutput/AvatarSkillDepotExcelConfigData.json")
@@ -124,6 +127,34 @@ val extraConstellationData by lazy {
         .getResource("./BinOutput/Talent/AvatarTalents")!!.toURI()).walk()
         .map { resource<Map<String, List<AvatarTalentDataExtra>>>(it.path) }
         .reduce { acc, b -> acc + b }
+}
+
+val loader: ClassLoader = AvatarTalentDataExtra::class.java.classLoader
+fun walk(pathName: String) = File(loader.getResource(pathName)!!.toURI()).walk()
+
+@Serializable
+data class AbilityEmbryoData(
+    val abilityID: String,
+    val abilityName: String,
+    val abilityOverride: String,
+)
+@Serializable
+data class AvatarEmbryoData(val abilities: List<AbilityEmbryoData>)
+@Serializable
+data class McEmbryoData(val targetAbilities: List<AbilityEmbryoData>)
+
+val avatarEmbryoPattern: Pattern = Pattern.compile("ConfigAvatar_(?<name>[^\\W_]+)\\.json")
+val avatarEmbryoMap: Map<String, List<String>> by lazy {
+    walk("./BinOutput/Avatar/").mapNotNull {
+        val matcher = avatarEmbryoPattern.matcher(it.path)
+        if (!matcher.find()) return@mapNotNull null
+        val name = matcher.group("name")
+        val res = resource<AvatarEmbryoData>(it.path)
+        name to res.abilities.map(AbilityEmbryoData::abilityName)
+    }.toMap()
+}
+val mcEmbryoMap by lazy {
+    resource<Map<String, McEmbryoData>>("./BinOutput/AbilityGroup/AbilityGroup_Other_PlayerElementAbility.json")
 }
 
 val fetterExpData = listOf(1000, 1550, 2050, 2600, 3175, 3750, 4350, 4975, 5650, 6325)

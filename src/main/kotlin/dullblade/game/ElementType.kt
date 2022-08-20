@@ -5,7 +5,7 @@ enum class ElementType(
     val curEnergyProp: Stat,
     val maxEnergyProp: Stat,
     val teamResonanceId: Int = 0,
-    configName: String? = null,
+    val configName: String? = null,
     depotValue: Int = 0
 ) {
     None(0, Stat.CUR_FIRE_ENERGY, Stat.MAX_FIRE_ENERGY),

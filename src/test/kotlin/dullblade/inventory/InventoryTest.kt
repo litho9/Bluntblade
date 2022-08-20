@@ -1,6 +1,8 @@
 package dullblade.inventory
 
+import com.google.protobuf.GeneratedMessageV3
 import dullblade.*
+import dullblade.game.PacketOpcodes
 import dullblade.inventory.InventoryMessages.CalcWeaponUpgradeReturnItemsRsp
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
@@ -10,6 +12,10 @@ class TestGameSession : GameSession() {
 
     override fun send(vararg packets: BasePacket) {
         this.packets.addAll(packets)
+    }
+
+    override fun send(data: GeneratedMessageV3?, header: ByteArray, encryption: ByteArray?, opcode: PacketOpcodes) {
+        this.packets.add(BasePacket(data, header, encryption, opcode))
     }
 }
 

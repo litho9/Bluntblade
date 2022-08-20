@@ -2,6 +2,7 @@ package dullblade
 
 import ch.qos.logback.classic.Logger
 import com.google.protobuf.GeneratedMessageV3
+import dullblade.game.ClimateType
 import dullblade.game.PacketOpcodes
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -63,9 +64,31 @@ fun main(args: Array<String>) {
     }
 }
 
+class World(
+    val id: Int,
+    val host: GameSession,
+    val guests: MutableList<GameSession>,
+    val isMultiplayer: Boolean = false,
+    val weatherId: Int,
+    val climate: ClimateType
+) {
+    val players: List<GameSession>
+        get() = guests + host
+    val accounts: List<Account>
+        get() = players.map(GameSession::account)
+}
+
 abstract class GameSession {
     lateinit var account: Account
     var lastClientSeq = 10
+
+    var world: World? = null
+    lateinit var scene: Scene
+    var curTeamId: Int = 0
+    lateinit var curTeam: List<EntityAvatar>
+    var curAvatar: EntityAvatar = curTeam[0]
+    var enterSceneToken: Int = 0
+    var peerId: Int = 0
 
     abstract fun send(vararg packets: BasePacket)
     abstract fun send(

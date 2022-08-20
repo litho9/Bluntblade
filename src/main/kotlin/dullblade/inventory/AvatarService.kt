@@ -153,7 +153,7 @@ object AvatarService {
     }
 
     fun recalcStats(session: GameSession, avatar: Avatar) {
-        val extraAbilityEmbryos: MutableSet<String> = HashSet() // TODO
+        avatar.extraAbilityEmbryos.clear()
 
         val data = avatarData[avatar.id]!!
         val (hpCurve, atkCurve, defCurve) = data.curves
@@ -197,7 +197,7 @@ object AvatarService {
             val affixes = List(relicSetData.setNeedNums.filter { it <= u.size }.size) { idx ->
                 equipAffixData[relicSetData.equipAffixId]!![idx] }
             affixes.flatMap { it.props }.forEach { props.add(it.PropType, it.Value) }
-            extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
+            avatar.extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
         }
 
         val weapon = session.account.inventory.weapons[avatar.weaponGuid]!!
@@ -212,15 +212,15 @@ object AvatarService {
             .forEach { props.add(it.PropType, it.Value) }
         val affixes = weapon.affixIds.map { equipAffixData[it]!![weapon.refinement - 1] }
         affixes.flatMap { it.props }.forEach { props.add(it.PropType, it.Value) }
-        extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
+        avatar.extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
 
         val proudSkillList = skillDepot?.InherentProudSkillOpens
             ?.filter { it.ProudSkillGroupId != null && it.NeedAvatarPromoteLevel <= avatar.promoteLevel }
             ?.map { proudSkillData[it.ProudSkillGroupId]!![0] }
         proudSkillList?.flatMap { it.props }?.forEach { props.add(it.PropType, it.Value) }
-        extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
+        avatar.extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
 
-        extraAbilityEmbryos.addAll(avatar.constellations
+        avatar.extraAbilityEmbryos.addAll(avatar.constellations
             .map { avatarTalentData[it]!!.openConfig })
 
         props[MAX_HP] = props[BASE_HP] * (1f + props[HP_PERCENT]) + props[HP]

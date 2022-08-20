@@ -3,25 +3,23 @@ package dullblade
 import dullblade.packets.PacketGadgetInteractRsp
 import java.util.concurrent.ConcurrentHashMap
 
-abstract class GameEntity(private val scene: Scene)
+//abstract class EntityBaseGadget(scene: Scene) : GameEntity(scene) {
+//    abstract val gadgetId: Int
+//}
+//
+//class EntityItem(
+//    scene: Scene,
+//    override val gadgetId: Int,
+//    val item: GameItem,
+//    val guid: Long,
+//    val isShare: Boolean = true
+//) : EntityBaseGadget(scene) {
+////    override fun toProto(): SceneEntityInfo? {
+////        TODO("Not yet implemented")
+////    }
+//}
 
-abstract class EntityBaseGadget(scene: Scene) : GameEntity(scene) {
-    abstract val gadgetId: Int
-}
-
-class EntityItem(
-    scene: Scene,
-    override val gadgetId: Int,
-    val item: GameItem,
-    val guid: Long,
-    val isShare: Boolean = true
-) : EntityBaseGadget(scene) {
-//    override fun toProto(): SceneEntityInfo? {
-//        TODO("Not yet implemented")
-//    }
-}
-
-class Scene {
+class Scene(val id: Int) {
     fun broadcastPacket(packetGadgetInteractRsp: PacketGadgetInteractRsp): PacketGadgetInteractRsp {
         return packetGadgetInteractRsp // TODO("Not yet implemented")
     }

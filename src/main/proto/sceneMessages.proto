@@ -1,0 +1,881 @@
+syntax = "proto3";
+
+option java_package = "dullblade.interaction";
+option java_multiple_files = true;
+
+import "inventoryMessages.proto"; // Item
+import "avatarMessages.proto"; // PropValue
+import "packetMessages.proto"; // ServerBuff
+
+enum MpSettingType {
+  MP_SETTING_TYPE_NO_ENTER = 0;
+  MP_SETTING_TYPE_ENTER_FREELY = 1;
+  MP_SETTING_TYPE_ENTER_AFTER_APPLY = 2;
+}
+
+message ProfilePicture {
+  uint32 avatar_id = 1;
+  uint32 costume_id = 2;
+}
+
+message OnlinePlayerInfo {
+  uint32 uid = 1;
+  string nickname = 2;
+  uint32 player_level = 3;
+  uint32 avatar_id = 4;
+  MpSettingType mp_setting_type = 5;
+  uint32 cur_player_num_in_world = 6;
+  uint32 world_level = 7;
+  string online_id = 8;
+  uint32 name_card_id = 9;
+  repeated uint32 blacklist_uid_list = 10;
+  string signature = 11;
+  ProfilePicture profile_picture = 12;
+  string psn_id = 13;
+}
+
+// CmdId: 82
+// EnetChannelId: 1
+// EnetIsReliable: true
+message ServerTimeNotify {
+  uint64 server_time = 15;
+}
+
+// CmdId: 3304
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message WorldPlayerInfoNotify {
+  repeated OnlinePlayerInfo player_info_list = 6;
+  repeated uint32 player_uid_list = 5;
+}
+
+// CmdId: 3131
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message WorldDataNotify {
+  map<uint32, PropValue> world_prop_map = 3;
+
+  enum DataType {
+    DATA_TYPE_NONE = 0;
+    DATA_TYPE_WORLD_LEVEL = 1;
+    DATA_TYPE_IS_IN_MP_MODE = 2;
+  }
+}
+
+message PlayerWorldSceneInfo {
+  uint32 scene_id = 1;
+  bool is_locked = 2;
+  repeated uint32 scene_tag_id_list = 3;
+}
+
+// CmdId: 3172
+// EnetChannelId: 0
+// EnetIsReliable: true
+message PlayerWorldSceneInfoListNotify {
+  repeated PlayerWorldSceneInfo info_list = 5;
+}
+
+// CmdId: 341
+// EnetChannelId: 0
+// EnetIsReliable: true
+message HostPlayerNotify {
+  uint32 host_uid = 10;
+  uint32 host_peer_id = 7;
+}
+
+// CmdId: 262
+// EnetChannelId: 0
+// EnetIsReliable: true
+message SceneTimeNotify {
+  uint32 scene_id = 3;
+  bool is_paused = 5;
+  uint64 scene_time = 14;
+}
+
+// CmdId: 155
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message PlayerGameTimeNotify {
+  uint32 game_time = 7;
+  uint32 uid = 13;
+  bool is_home = 12;
+}
+
+message AbilityString {
+  oneof type {
+    string str = 1;
+    uint32 hash = 2;
+  }
+}
+
+enum AbilityScalarType {
+  ABILITY_SCALAR_TYPE_UNKNOW = 0;
+  ABILITY_SCALAR_TYPE_FLOAT = 1;
+  ABILITY_SCALAR_TYPE_INT = 2;
+  ABILITY_SCALAR_TYPE_BOOL = 3;
+  ABILITY_SCALAR_TYPE_TRIGGER = 4;
+  ABILITY_SCALAR_TYPE_STRING = 5;
+  ABILITY_SCALAR_TYPE_UINT = 6;
+}
+
+message AbilityScalarValueEntry {
+  AbilityString key = 1;
+  AbilityScalarType value_type = 2;
+  oneof value {
+    float float_value = 3;
+    string string_value = 4;
+    int32 int_value = 5;
+    uint32 uint_value = 6;
+  }
+}
+
+message AbilityAppliedAbility {
+  AbilityString ability_name = 1;
+  AbilityString ability_override = 2;
+  repeated AbilityScalarValueEntry override_map = 3;
+  uint32 instanced_ability_id = 4;
+}
+
+message AbilityAttachedModifier {
+  bool is_invalid = 1;
+  uint32 owner_entity_id = 2;
+  uint32 instanced_modifier_id = 3;
+  bool is_serverbuff_modifier = 4;
+  int32 attach_name_hash = 5;
+}
+
+message ModifierDurability {
+  float reduce_ratio = 1;
+  float remaining_durability = 2;
+}
+
+message AbilityAppliedModifier {
+  int32 modifier_local_id = 1;
+  uint32 parent_ability_entity_id = 2;
+  AbilityString parent_ability_name = 3;
+  AbilityString parent_ability_override = 4;
+  uint32 instanced_ability_id = 5;
+  uint32 instanced_modifier_id = 6;
+  float exist_duration = 7;
+  AbilityAttachedModifier attached_instanced_modifier = 8;
+  uint32 apply_entity_id = 9;
+  bool is_attached_parent_ability = 10;
+  ModifierDurability modifier_durability = 11;
+  uint32 sbuff_uid = 12;
+  bool is_serverbuff_modifier = 13;
+}
+
+message MassivePropParam {
+  int32 type = 1;
+  repeated uint32 reaction_info_list = 2;
+  repeated float param_list = 3;
+  uint32 sync_flag = 4;
+}
+
+message MassivePropSyncInfo {
+  int64 id = 1;
+  repeated MassivePropParam prop_list = 2;
+}
+
+message AbilityMixinRecoverInfo {
+  uint32 local_id = 3;
+  repeated uint32 data_list = 4;
+  bool is_serverbuff_modifier = 5;
+  repeated MassivePropSyncInfo massive_prop_list = 6;
+  oneof source {
+    uint32 instanced_ability_id = 1;
+    uint32 instanced_modifier_id = 2;
+  }
+}
+
+message AbilitySyncStateInfo {
+  bool is_inited = 1;
+  repeated AbilityScalarValueEntry dynamic_value_map = 2;
+  repeated AbilityAppliedAbility applied_abilities = 3;
+  repeated AbilityAppliedModifier applied_modifiers = 4;
+  repeated AbilityMixinRecoverInfo mixin_recover_infos = 5;
+  repeated AbilityScalarValueEntry sgv_dynamic_value_map = 6;
+}
+
+message AvatarEnterSceneInfo {
+  uint64 avatar_guid = 1;
+  uint32 avatar_entity_id = 2;
+  AbilitySyncStateInfo avatar_ability_info = 3;
+  repeated uint32 buff_id_list = 4;
+  uint64 weapon_guid = 5;
+  uint32 weapon_entity_id = 6;
+  AbilitySyncStateInfo weapon_ability_info = 7;
+  repeated ServerBuff server_buff_list = 8;
+}
+
+message AbilityEmbryo {
+  uint32 ability_id = 1;
+  fixed32 ability_name_hash = 2;
+  fixed32 ability_override_name_hash = 3;
+}
+
+message AbilityControlBlock {
+  repeated AbilityEmbryo ability_embryo_list = 1;
+}
+
+message TeamEnterSceneInfo {
+  uint32 team_entity_id = 1;
+  AbilitySyncStateInfo team_ability_info = 2;
+  AbilityControlBlock ability_control_block = 3;
+}
+
+message MPLevelEntityInfo {
+  uint32 entity_id = 1;
+  uint32 authority_peer_id = 2;
+  AbilitySyncStateInfo ability_info = 3;
+}
+
+// CmdId: 274
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message PlayerEnterSceneInfoNotify {
+  uint32 cur_avatar_entity_id = 8;
+  repeated AvatarEnterSceneInfo avatar_enter_info = 14;
+  TeamEnterSceneInfo team_enter_info = 9;
+  MPLevelEntityInfo mp_level_entity_info = 5;
+  uint32 enter_scene_token = 7;
+}
+
+// CmdId: 229
+// EnetChannelId: 0
+// EnetIsReliable: true
+message SceneAreaWeatherNotify {
+  uint32 weather_gadget_id = 13;
+  map<uint32, string> weather_value_map = 10;
+  uint32 weather_area_id = 15;
+  uint32 climate_type = 14;
+  float trans_duration = 11;
+}
+
+message ScenePlayerInfo {
+  uint32 uid = 1;
+  uint32 peer_id = 2;
+  string name = 3;
+  bool is_connected = 4;
+  uint32 scene_id = 5;
+  OnlinePlayerInfo online_player_info = 6;
+}
+
+// CmdId: 225
+// EnetChannelId: 0
+// EnetIsReliable: true
+message ScenePlayerInfoNotify {
+  repeated ScenePlayerInfo player_info_list = 11;
+}
+
+message EntityRendererChangedInfo {
+  map<string, uint32> changed_renderers = 1;
+  uint32 visibility_count = 2;
+  bool is_cached = 3;
+}
+
+message SceneWeaponInfo {
+  uint32 entity_id = 1;
+  uint32 gadget_id = 2;
+  uint32 item_id = 3;
+  uint64 guid = 4;
+  uint32 level = 5;
+  uint32 promote_level = 6;
+  AbilitySyncStateInfo ability_info = 7;
+  map<uint32, uint32> affix_map = 8;
+  EntityRendererChangedInfo renderer_changed_info = 9;
+}
+
+message SceneReliquaryInfo {
+  uint32 item_id = 1;
+  uint64 guid = 2;
+  uint32 level = 3;
+  uint32 promote_level = 4;
+}
+
+message CurVehicleInfo {
+  uint32 entity_id = 1;
+  uint32 pos = 2;
+}
+
+message SceneAvatarInfo {
+  uint32 uid = 1;
+  uint32 avatar_id = 2;
+  uint64 guid = 3;
+  uint32 peer_id = 4;
+  repeated uint32 equip_id_list = 5;
+  uint32 skill_depot_id = 6;
+  repeated uint32 talent_id_list = 7;
+  SceneWeaponInfo weapon = 8;
+  repeated SceneReliquaryInfo reliquary_list = 9;
+  uint32 core_proud_skill_level = 11;
+  repeated uint32 inherent_proud_skill_list = 12;
+  map<uint32, uint32> skill_level_map = 13;
+  map<uint32, uint32> proud_skill_extra_level_map = 14;
+  repeated ServerBuff server_buff_list = 15;
+  repeated uint32 team_resonance_list = 16;
+  uint32 wearing_flycloak_id = 17;
+  uint32 born_time = 18;
+  uint32 costume_id = 19;
+  CurVehicleInfo cur_vehicle_info = 20;
+  AvatarExcelInfo excel_info = 21;
+  uint32 anim_hash = 22;
+}
+
+enum ProtEntityType {
+  PROT_ENTITY_TYPE_NONE = 0;
+  PROT_ENTITY_TYPE_AVATAR = 1;
+  PROT_ENTITY_TYPE_MONSTER = 2;
+  PROT_ENTITY_TYPE_NPC = 3;
+  PROT_ENTITY_TYPE_GADGET = 4;
+  PROT_ENTITY_TYPE_REGION = 5;
+  PROT_ENTITY_TYPE_WEAPON = 6;
+  PROT_ENTITY_TYPE_WEATHER = 7;
+  PROT_ENTITY_TYPE_SCENE = 8;
+  PROT_ENTITY_TYPE_TEAM = 9;
+  PROT_ENTITY_TYPE_MASSIVE_ENTITY = 10;
+  PROT_ENTITY_TYPE_MP_LEVEL = 11;
+  PROT_ENTITY_TYPE_PLAY_TEAM_ENTITY = 12;
+  PROT_ENTITY_TYPE_EYE_POINT = 13;
+  PROT_ENTITY_TYPE_MAX = 14;
+}
+
+//message Vector {
+//  float x = 1;
+//  float y = 2;
+//  float z = 3;
+//}
+
+enum MotionState {
+  MOTION_STATE_NONE = 0;
+  MOTION_STATE_RESET = 1;
+  MOTION_STATE_STANDBY = 2;
+  MOTION_STATE_STANDBY_MOVE = 3;
+  MOTION_STATE_WALK = 4;
+  MOTION_STATE_RUN = 5;
+  MOTION_STATE_DASH = 6;
+  MOTION_STATE_CLIMB = 7;
+  MOTION_STATE_CLIMB_JUMP = 8;
+  MOTION_STATE_STANDBY_TO_CLIMB = 9;
+  MOTION_STATE_FIGHT = 10;
+  MOTION_STATE_JUMP = 11;
+  MOTION_STATE_DROP = 12;
+  MOTION_STATE_FLY = 13;
+  MOTION_STATE_SWIM_MOVE = 14;
+  MOTION_STATE_SWIM_IDLE = 15;
+  MOTION_STATE_SWIM_DASH = 16;
+  MOTION_STATE_SWIM_JUMP = 17;
+  MOTION_STATE_SLIP = 18;
+  MOTION_STATE_GO_UPSTAIRS = 19;
+  MOTION_STATE_FALL_ON_GROUND = 20;
+  MOTION_STATE_JUMP_UP_WALL_FOR_STANDBY = 21;
+  MOTION_STATE_JUMP_OFF_WALL = 22;
+  MOTION_STATE_POWERED_FLY = 23;
+  MOTION_STATE_LADDER_IDLE = 24;
+  MOTION_STATE_LADDER_MOVE = 25;
+  MOTION_STATE_LADDER_SLIP = 26;
+  MOTION_STATE_STANDBY_TO_LADDER = 27;
+  MOTION_STATE_LADDER_TO_STANDBY = 28;
+  MOTION_STATE_DANGER_STANDBY = 29;
+  MOTION_STATE_DANGER_STANDBY_MOVE = 30;
+  MOTION_STATE_DANGER_WALK = 31;
+  MOTION_STATE_DANGER_RUN = 32;
+  MOTION_STATE_DANGER_DASH = 33;
+  MOTION_STATE_CROUCH_IDLE = 34;
+  MOTION_STATE_CROUCH_MOVE = 35;
+  MOTION_STATE_CROUCH_ROLL = 36;
+  MOTION_STATE_NOTIFY = 37;
+  MOTION_STATE_LAND_SPEED = 38;
+  MOTION_STATE_MOVE_FAIL_ACK = 39;
+  MOTION_STATE_WATERFALL = 40;
+  MOTION_STATE_DASH_BEFORE_SHAKE = 41;
+  MOTION_STATE_SIT_IDLE = 42;
+  MOTION_STATE_FORCE_SET_POS = 43;
+  MOTION_STATE_QUEST_FORCE_DRAG = 44;
+  MOTION_STATE_FOLLOW_ROUTE = 45;
+  MOTION_STATE_SKIFF_BOARDING = 46;
+  MOTION_STATE_SKIFF_NORMAL = 47;
+  MOTION_STATE_SKIFF_DASH = 48;
+  MOTION_STATE_SKIFF_POWERED_DASH = 49;
+  MOTION_STATE_DESTROY_VEHICLE = 50;
+  MOTION_STATE_FLY_IDLE = 51;
+  MOTION_STATE_FLY_SLOW = 52;
+  MOTION_STATE_FLY_FAST = 53;
+  MOTION_STATE_NUM = 54;
+  MOTION_STATE_OOFNNHKLEFE = 55;
+  MOTION_STATE_KMIGLMEGNOK = 56;
+}
+
+message MotionInfo {
+  Vector pos = 1;
+  Vector rot = 2;
+  Vector speed = 3;
+  MotionState state = 4;
+  repeated Vector params = 5;
+  Vector ref_pos = 6;
+  uint32 ref_id = 7;
+  uint32 scene_time = 8;
+  uint64 interval_velocity = 9;
+}
+
+message PropPair {
+  uint32 type = 1;
+  PropValue prop_value = 2;
+}
+
+message FightPropPair {
+  uint32 prop_type = 1;
+  float prop_value = 2;
+}
+
+message AnimatorParameterValueInfo {
+  uint32 para_type = 1;
+  oneof para_val {
+    int32 int_val = 2;
+    float float_val = 3;
+    bool bool_val = 4;
+  }
+}
+
+message AnimatorParameterValueInfoPair {
+  int32 name_id = 1;
+  AnimatorParameterValueInfo animator_para = 2;
+}
+
+message EntityClientData {
+  uint32 wind_change_scene_time = 1;
+  float windmill_sync_angle = 2;
+  int32 wind_change_target_level = 3;
+}
+
+message EntityEnvironmentInfo {
+  uint32 json_climate_type = 1;
+  uint32 climate_area_id = 2;
+}
+
+message ServantInfo {
+  uint32 master_entity_id = 1;
+  uint32 born_slot_index = 2;
+}
+
+message SceneEntityAiInfo {
+  bool is_ai_open = 1;
+  Vector born_pos = 2;
+  map<uint32, uint32> skill_cd_map = 3;
+  ServantInfo servant_info = 4;
+  map<uint32, uint32> ai_threat_map = 5;
+  map<uint32, uint32> skill_group_cd_map = 6;
+  uint32 cur_tactic = 7;
+}
+
+message EntityAuthorityInfo {
+  AbilitySyncStateInfo ability_info = 1;
+  EntityRendererChangedInfo renderer_changed_info = 2;
+  SceneEntityAiInfo ai_info = 3;
+  Vector born_pos = 4;
+  repeated AnimatorParameterValueInfoPair pose_para_list = 5;
+  //HFMDKDHCJCM NHJAJEMKIFE = 6;
+}
+
+enum MonsterBornType {
+  MONSTER_BORN_TYPE_NONE = 0;
+  MONSTER_BORN_TYPE_DEFAULT = 1;
+  MONSTER_BORN_TYPE_RANDOM = 2;
+}
+
+message MathQuaternion {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float w = 4;
+}
+
+message RoutePoint {
+  Vector position = 1;
+  float arrive_range = 2;
+  oneof move_params {
+    float velocity = 11;
+    float time = 12;
+  }
+  oneof rotate_params {
+    Vector rotation = 21;
+    MathQuaternion rotation_speed = 22;
+    MathQuaternion axis_speed = 23;
+  }
+}
+
+message MonsterRoute {
+  repeated RoutePoint route_points = 1;
+  uint32 speed_level = 2;
+  uint32 route_type = 3;
+  float arrive_range = 4;
+}
+
+message SceneFishInfo {
+  uint32 fish_id = 1;
+  uint32 fish_pool_entity_id = 2;
+  Vector fish_pool_pos = 3;
+  uint32 fish_pool_gadget_id = 4;
+  uint32 LPNFLHKPHEC = 5;
+}
+
+message SceneMonsterInfo {
+  uint32 monster_id = 1;
+  uint32 group_id = 2;
+  uint32 config_id = 3;
+  repeated SceneWeaponInfo weapon_list = 4;
+  uint32 authority_peer_id = 5;
+  repeated uint32 affix_list = 6;
+  bool is_elite = 7;
+  uint32 owner_entity_id = 8;
+  uint32 summoned_tag = 9;
+  map<uint32, uint32> summon_tag_map = 10;
+  uint32 pose_id = 11;
+  MonsterBornType born_type = 12;
+  uint32 block_id = 13;
+  uint32 mark_flag = 14;
+  uint32 title_id = 15;
+  uint32 special_name_id = 16;
+  uint32 attack_target_id = 17;
+  MonsterRoute monster_route = 18;
+  uint32 ai_config_id = 19;
+  uint32 level_route_id = 20;
+  uint32 init_pose_id = 21;
+  oneof content {
+    SceneFishInfo fish_info = 50;
+  }
+}
+
+message SceneNpcInfo {
+  uint32 npc_id = 1;
+  uint32 room_id = 2;
+  uint32 parent_quest_id = 3;
+  uint32 block_id = 4;
+}
+
+enum GadgetBornType {
+  GADGET_BORN_TYPE_NONE = 0;
+  GADGET_BORN_TYPE_IN_AIR = 1;
+  GADGET_BORN_TYPE_PLAYER = 2;
+  GADGET_BORN_TYPE_MONSTER_HIT = 3;
+  GADGET_BORN_TYPE_MONSTER_DIE = 4;
+  GADGET_BORN_TYPE_GADGET = 5;
+  GADGET_BORN_TYPE_GROUND = 6;
+}
+
+enum MovingPlatformType {
+  MOVING_PLATFORM_TYPE_NONE = 0;
+  MOVING_PLATFORM_TYPE_USE_CONFIG = 1;
+  MOVING_PLATFORM_TYPE_ABILITY = 2;
+  MOVING_PLATFORM_TYPE_ROUTE = 3;
+}
+
+message PlatformInfo {
+  uint32 route_id = 1;
+  int32 start_index = 2;
+  uint32 start_route_time = 3;
+  uint32 start_scene_time = 4;
+  Vector start_pos = 7;
+  bool is_started = 8;
+  MathQuaternion start_rot = 9;
+  uint32 stop_scene_time = 10;
+  Vector pos_offset = 11;
+  MathQuaternion rot_offset = 12;
+  MovingPlatformType moving_platform_type = 13;
+  bool is_active = 14;
+  Route route = 15;
+  uint32 point_id = 16;
+}
+
+message Route {
+  repeated RoutePoint route_points = 1;
+  uint32 route_type = 2;
+}
+
+message GadgetCrucibleInfo {
+  uint32 mp_play_id = 1;
+  uint32 prepare_end_time = 2;
+}
+
+message GadgetPlayInfo {
+  uint32 play_type = 1;
+  uint32 duration = 2;
+  repeated uint32 progress_stage_list = 3;
+  uint32 start_cd = 4;
+  uint32 start_time = 5;
+  uint32 progress = 6;
+  oneof play_info {
+    GadgetCrucibleInfo crucible_info = 21;
+  }
+}
+
+message GatherGadgetInfo {
+  uint32 item_id = 1;
+  bool is_forbid_guest = 2;
+}
+
+message WorktopInfo {
+  repeated uint32 option_list = 1;
+  bool is_guest_can_operate = 2;
+}
+
+message ClientGadgetInfo {
+  uint32 camp_id = 1;
+  uint32 camp_type = 2;
+  uint64 guid = 3;
+  uint32 owner_entity_id = 4;
+  uint32 target_entity_id = 5;
+  bool async_load = 6;
+  bool CEGHBCJMNFJ = 7;
+  repeated uint32 FCFECGFHLAD = 8;
+}
+
+message WeatherInfo {
+  uint32 weather_area_id = 1;
+}
+
+message AbilityGadgetInfo {
+  uint32 camp_id = 1;
+  uint32 camp_target_type = 2;
+  uint32 target_entity_id = 3;
+}
+
+message StatueGadgetInfo {
+  repeated uint32 opened_statue_uid_list = 1;
+}
+
+message WeeklyBossResinDiscountInfo {
+  uint32 discount_num = 1;
+  uint32 discount_num_limit = 2;
+  uint32 resin_cost = 3;
+  uint32 original_resin_cost = 4;
+}
+
+message BossChestInfo {
+  uint32 monster_config_id = 1;
+  uint32 resin = 2;
+  repeated uint32 remain_uid_list = 3;
+  repeated uint32 qualify_uid_list = 4;
+  map<uint32, WeeklyBossResinDiscountInfo> uid_discount_map = 5;
+}
+
+message BlossomChestInfo {
+  uint32 resin = 1;
+  repeated uint32 qualify_uid_list = 2;
+  repeated uint32 remain_uid_list = 3;
+  uint32 dead_time = 4;
+  uint32 blossom_refresh_type = 5;
+  uint32 refresh_id = 6;
+}
+
+message MpPlayRewardInfo {
+  uint32 resin = 1;
+  repeated uint32 remain_uid_list = 2;
+  repeated uint32 qualify_uid_list = 3;
+}
+
+message GadgetGeneralRewardInfo {
+  uint32 resin = 1;
+  uint32 dead_time = 2;
+  repeated uint32 remain_uid_list = 3;
+  repeated uint32 qualify_uid_list = 4;
+  ItemParam item_param = 5;
+}
+
+message OfferingInfo {
+  uint32 offering_id = 1;
+}
+
+enum FoundationStatus {
+  FOUNDATION_STATUS_NONE = 0;
+  FOUNDATION_STATUS_INIT = 1;
+  FOUNDATION_STATUS_BUILDING = 2;
+  FOUNDATION_STATUS_BUILT = 3;
+}
+
+message FoundationInfo {
+  FoundationStatus status = 1;
+  repeated uint32 uid_list = 2;
+  uint32 current_building_id = 3;
+  uint32 begin_build_time_ms = 4;
+}
+
+message VehicleMember {
+  uint32 uid = 1;
+  uint64 avatar_guid = 2;
+  uint32 pos = 3;
+}
+
+message VehicleInfo {
+  repeated VehicleMember member_list = 1;
+  uint32 owner_uid = 2;
+  float cur_stamina = 3;
+}
+
+message EchoShellInfo {
+  uint32 shell_id = 1;
+}
+
+message ScreenInfo {
+  uint32 live_id = 1;
+  uint32 projector_entity_id = 2;
+}
+
+message FishPoolInfo {
+  uint32 pool_id = 1;
+  repeated uint32 fish_area_list = 2;
+  uint32 today_fish_num = 3;
+}
+
+message CustomCommonNodeInfo {
+  int32 parent_index = 1;
+  uint32 config_id = 2;
+  string slot_identifier = 3;
+}
+
+message CustomGadgetTreeInfo {
+  repeated CustomCommonNodeInfo node_list = 1;
+}
+
+message RoguelikeGadgetInfo {
+  uint32 cell_config_id = 1;
+  uint32 cell_type = 2;
+  uint32 cell_state = 3;
+  uint32 cell_id = 4;
+}
+
+message SceneGadgetInfo {
+  uint32 gadget_id = 1;
+  uint32 group_id = 2;
+  uint32 config_id = 3;
+  uint32 owner_entity_id = 4;
+  GadgetBornType born_type = 5;
+  uint32 gadget_state = 6;
+  uint32 gadget_type = 7;
+  bool is_show_cutscene = 8;
+  uint32 authority_peer_id = 9;
+  bool is_enable_interact = 10;
+  uint32 interact_id = 11;
+  uint32 mark_flag = 21;
+  uint32 prop_owner_entity_id = 22;
+  PlatformInfo platform = 23;
+  repeated uint32 interact_uid_list = 24;
+  uint32 draft_id = 25;
+  uint32 gadget_talk_state = 26;
+  GadgetPlayInfo play_info = 100;
+  oneof content {
+    Item trifle_item = 12;
+    GatherGadgetInfo gather_gadget = 13;
+    WorktopInfo worktop = 14;
+    ClientGadgetInfo client_gadget = 15;
+    WeatherInfo weather = 17;
+    AbilityGadgetInfo ability_gadget = 18;
+    StatueGadgetInfo statue_gadget = 19;
+    BossChestInfo boss_chest = 20;
+    BlossomChestInfo blossom_chest = 41;
+    MpPlayRewardInfo mp_play_reward = 42;
+    GadgetGeneralRewardInfo general_reward = 43;
+    OfferingInfo offering_info = 44;
+    FoundationInfo foundation_info = 45;
+    VehicleInfo vehicle_info = 46;
+    EchoShellInfo shell_info = 47;
+    ScreenInfo screen_info = 48;
+    FishPoolInfo fish_pool_info = 59;
+    CustomGadgetTreeInfo custom_gadget_tree_info = 60;
+    RoguelikeGadgetInfo roguelike_gadget_info = 61;
+  }
+}
+
+message SceneEntityInfo {
+  ProtEntityType entity_type = 1;
+  uint32 entity_id = 2;
+  string name = 3;
+  MotionInfo motion_info = 4;
+  repeated PropPair prop_list = 5;
+  repeated FightPropPair fight_prop_list = 6;
+  uint32 life_state = 7;
+  repeated AnimatorParameterValueInfoPair animator_para_list = 9;
+  uint32 last_move_scene_time_ms = 17;
+  uint32 last_move_reliable_seq = 18;
+  EntityClientData entity_client_data = 19;
+  repeated EntityEnvironmentInfo entity_environment_info_list = 20;
+  EntityAuthorityInfo entity_authority_info = 21;
+  repeated string tag_list = 22;
+  repeated ServerBuff server_buff_list = 23;
+  oneof entity {
+    SceneAvatarInfo avatar = 10;
+    SceneMonsterInfo monster = 11;
+    SceneNpcInfo npc = 12;
+    SceneGadgetInfo gadget = 13;
+  }
+}
+
+message SceneTeamAvatar {
+  uint32 player_uid = 1;
+  uint64 avatar_guid = 2;
+  uint32 scene_id = 3;
+  uint32 entity_id = 4;
+  AvatarInfo avatar_info = 5;
+  SceneAvatarInfo scene_avatar_info = 6;
+  AbilitySyncStateInfo avatar_ability_info = 7;
+  repeated ServerBuff server_buff_list = 8;
+  SceneEntityInfo scene_entity_info = 9;
+  uint64 weapon_guid = 10;
+  uint32 weapon_entity_id = 11;
+  AbilitySyncStateInfo weapon_ability_info = 12;
+  AbilityControlBlock ability_control_block = 13;
+  bool is_reconnect = 14;
+  bool is_player_cur_avatar = 15;
+  bool is_on_scene = 16;
+}
+
+// CmdId: 1699
+// EnetChannelId: 0
+// EnetIsReliable: true
+message SceneTeamUpdateNotify {
+  repeated SceneTeamAvatar scene_team_avatar_list = 11;
+  bool is_in_mp = 1;
+}
+
+message TeamEntityInfo {
+  uint32 team_entity_id = 1;
+  uint32 authority_peer_id = 2;
+  AbilitySyncStateInfo team_ability_info = 3;
+}
+
+// CmdId: 334
+// EnetChannelId: 0
+// EnetIsReliable: true
+message SyncTeamEntityNotify {
+  uint32 scene_id = 13;
+  repeated TeamEntityInfo team_entity_info_list = 2;
+}
+
+message PlayTeamEntityInfo {
+  uint32 entity_id = 1;
+  uint32 player_uid = 2;
+  uint32 authority_peer_id = 3;
+  uint32 gadget_config_id = 5;
+  AbilitySyncStateInfo ability_info = 6;
+}
+
+// CmdId: 3096
+// EnetChannelId: 0
+// EnetIsReliable: true
+message SyncScenePlayTeamEntityNotify {
+  uint32 scene_id = 13;
+  repeated PlayTeamEntityInfo entity_info_list = 2;
+}
+
+// CmdId: 232
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message SceneInitFinishRsp {
+  int32 retcode = 10;
+  uint32 enter_scene_token = 15;
+}

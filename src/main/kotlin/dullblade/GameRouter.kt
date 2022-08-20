@@ -3,6 +3,7 @@ package dullblade
 import dullblade.account.AccountMessages.*
 import dullblade.account.AccountService
 import dullblade.game.PacketOpcodes
+import dullblade.interaction.SceneService
 import dullblade.inventory.AvatarMessages.*
 import dullblade.inventory.AvatarService
 import dullblade.inventory.InventoryService
@@ -42,6 +43,7 @@ object GameRouter {
 
         // interaction
 //        PacketOpcodes.GadgetInteractReq -> InteractionService.interactWith(session, GadgetInteractReq.parseFrom(payload))
+        PacketOpcodes.SceneInitFinishReq -> SceneService.initFinish(session)
         else -> null
     }
 }
