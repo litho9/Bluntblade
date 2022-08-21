@@ -2,8 +2,11 @@ package dullblade
 
 import dullblade.game.PropMap
 import dullblade.game.Stat
+import dullblade.interaction.*
 import dullblade.inventory.AvatarService
+import dullblade.inventory.vector
 import kotlinx.serialization.Serializable
+import java.util.concurrent.ConcurrentHashMap
 
 fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
@@ -136,7 +139,11 @@ class Avatar(
 abstract class GameEntity(
     var lastMoveSceneTimeMs: Int = 0,
     val lastMoveReliableSeq: Int = 0
-)
+) {
+    open fun toProto() : SceneEntityInfo {
+        TODO()
+    }
+}
 class EntityWeapon(
     val id: Int,
     val weapon: Weapon,
@@ -146,4 +153,31 @@ class EntityAvatar(
     val avatar: Avatar,
     val wield: EntityWeapon,
     val lifeState: AvatarService.LifeState,
-) : GameEntity()
+) : GameEntity() {
+    override fun toProto() = sceneEntityInfo {
+        entityId = id
+        entityType = ProtEntityType.PROT_ENTITY_TYPE_AVATAR
+        animatorParaList.add(animatorParameterValueInfoPair {})
+        entityClientData = entityClientData {}
+        entityAuthorityInfo = entityAuthorityInfo {
+            abilityInfo = abilitySyncStateInfo {}
+            rendererChangedInfo = entityRendererChangedInfo {}
+            aiInfo = sceneEntityAiInfo {
+                isAiOpen = true
+                bornPos = vector {}
+            }
+            bornPos = vector {}
+        }
+        lastMoveSceneTimeMs = this@EntityAvatar.lastMoveSceneTimeMs
+        lastMoveReliableSeq = this@EntityAvatar.lastMoveReliableSeq
+        lifeState = this@EntityAvatar.lifeState.value
+    }
+}
+
+class Scene(val id: Int) {
+//    fun broadcastPacket(packetGadgetInteractRsp: PacketGadgetInteractRsp): PacketGadgetInteractRsp {
+//        return packetGadgetInteractRsp // TODO("Not yet implemented")
+//    }
+
+    val entities: MutableMap<Int, GameEntity> = ConcurrentHashMap()
+}

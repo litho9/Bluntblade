@@ -44,6 +44,8 @@ object GameRouter {
         // interaction
 //        PacketOpcodes.GadgetInteractReq -> InteractionService.interactWith(session, GadgetInteractReq.parseFrom(payload))
         PacketOpcodes.SceneInitFinishReq -> SceneService.initFinish(session)
+        PacketOpcodes.EnterSceneReadyReq -> SceneService.enterReady(session)
+        PacketOpcodes.EnterSceneDoneReq -> SceneService.enterDone(session)
         else -> null
     }
 }

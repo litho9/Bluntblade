@@ -1,7 +1,7 @@
-package dullblade
+package dullblade.interaction
 
-import dullblade.packets.PacketGadgetInteractRsp
-import java.util.concurrent.ConcurrentHashMap
+//import dullblade.packets.PacketGadgetInteractRsp
+import dullblade.Scene
 
 //abstract class EntityBaseGadget(scene: Scene) : GameEntity(scene) {
 //    abstract val gadgetId: Int
@@ -18,14 +18,6 @@ import java.util.concurrent.ConcurrentHashMap
 ////        TODO("Not yet implemented")
 ////    }
 //}
-
-class Scene(val id: Int) {
-    fun broadcastPacket(packetGadgetInteractRsp: PacketGadgetInteractRsp): PacketGadgetInteractRsp {
-        return packetGadgetInteractRsp // TODO("Not yet implemented")
-    }
-
-    val entities: MutableMap<Int, GameEntity> = ConcurrentHashMap()
-}
 
 class InteractionManager(
     val scene: Scene,

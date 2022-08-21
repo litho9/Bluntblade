@@ -320,3 +320,11 @@ message AvatarLifeStateChangeNotify {
   uint32 move_reliable_seq = 7;
   repeated ServerBuff server_buff_list = 6;
 }
+
+// CmdId: 1035
+// EnetChannelId: 0
+// EnetIsReliable: true
+message AvatarSkillInfoNotify {
+  uint64 guid = 4;
+  map<uint32, AvatarSkillInfo> skill_map = 2;
+}

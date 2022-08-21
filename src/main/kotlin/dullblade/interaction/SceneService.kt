@@ -2,32 +2,13 @@ package dullblade.interaction
 
 import dullblade.*
 import dullblade.game.ElementType
-import dullblade.game.PacketOpcodes
+import dullblade.game.Stat
 import dullblade.inventory.*
 
 fun prop(propertyId: Int, value: Long) = propValue {
     type = propertyId
     ival = value
     this.value = value
-}
-
-fun protoFor(entity: EntityAvatar) = sceneEntityInfo {
-    entityId = entity.id
-    entityType = ProtEntityType.PROT_ENTITY_TYPE_AVATAR
-    animatorParaList.add(animatorParameterValueInfoPair {})
-    entityClientData = entityClientData {}
-    entityAuthorityInfo = entityAuthorityInfo {
-        abilityInfo = abilitySyncStateInfo {}
-        rendererChangedInfo = entityRendererChangedInfo {}
-        aiInfo = sceneEntityAiInfo {
-            isAiOpen = true
-            bornPos = vector {}
-        }
-        bornPos = vector {}
-    }
-    lastMoveSceneTimeMs = entity.lastMoveSceneTimeMs
-    lastMoveReliableSeq = entity.lastMoveReliableSeq
-    lifeState = entity.lifeState.value
 }
 
 val defaultEmbryos = listOf(
@@ -87,7 +68,7 @@ object SceneService {
             infoList.add(playerWorldSceneInfo { sceneId = 6 })
             infoList.add(playerWorldSceneInfo { sceneId = 7 })
         })
-        session.send(null, opcode=PacketOpcodes.SceneForceUnlockNotify)
+        session.send(sceneForceUnlockNotify {})
         session.send(hostPlayerNotify {
             hostUid = session.world!!.host.account.uid
             hostPeerId = 1 // session.world!!.peerId
@@ -155,7 +136,7 @@ object SceneService {
                     avatarGuid = entity.avatar.guid
                     sceneId = p.scene.id
                     entityId = entity.id
-                    sceneEntityInfo = protoFor(entity)
+                    sceneEntityInfo = entity.toProto()
                     weaponGuid = entity.wield.weapon.guid
                     weaponEntityId = entity.wield.id
                     isPlayerCurAvatar = p.curAvatar == entity
@@ -205,8 +186,72 @@ object SceneService {
         }, BasePacket.buildHeader(11))
     }
 
-    // enter ready
-    // enter done
+    fun enterReady(session: GameSession) {
+        session.send(enterScenePeerNotify {
+            destSceneId = session.scene.id
+            peerId = session.peerId
+            hostPeerId = session.world!!.host.peerId
+            enterSceneToken = session.enterSceneToken
+        })
+        session.send(enterSceneReadyRsp {
+            enterSceneToken = session.enterSceneToken
+        }, BasePacket.buildHeader(11))
+    }
+
+    fun enterDone(session: GameSession) {
+        session.send(enterSceneDoneRsp {
+            enterSceneToken = session.enterSceneToken
+        })
+        session.send(playerTimeNotify {
+            isPaused = session.isPaused
+            playerTime = session.clientTime
+            serverTime = System.currentTimeMillis()
+        }) // Probably not the right place
+
+        if (!session.scene.entities.containsKey(session.curAvatar.id)) {
+            if (session.curAvatar.avatar.prop(Stat.CUR_HP) <= 0f)
+                session.curAvatar.avatar.prop(Stat.CUR_HP, 1f)
+            add(session.curAvatar)
+            session.curTeam.filter { it.avatar.skillExtraCharges.isNotEmpty() }
+                .forEach { session.send(avatarSkillInfoNotify {
+                    skillMap.putAll(it.avatar.skillExtraCharges
+                        .mapValues { avatarSkillInfo { maxChargeCount = it.value } })
+                }) }
+        }
+        val entities = session.scene.entities.filter { it.key != session.curAvatar.id }
+        session.send(sceneEntityAppearNotify {
+            appearType = VisionType.VISION_TYPE_MEET
+            entityList.addAll(entities.values.map { it.toProto() })
+        })
+
+        session.send(worldPlayerLocationNotify {
+            playerWorldLocList.addAll(session.world!!.players
+                .map { playerWorldLocationInfo {
+                    sceneId = it.scene.id
+                    playerLoc = it.locationInfo
+                } })
+        })
+        session.send(scenePlayerLocationNotify {
+            sceneId = session.scene.id
+            playerLocList.addAll(session.world!!.players
+                .filter { it.scene.id == session.scene.id }
+                .map { it.locationInfo })
+        })
+        session.send(worldPlayerRTTNotify {
+            playerRttList.addAll(session.world!!.players.map {
+                playerRTTInfo {
+                    uid = it.account.uid
+                    rtt = it.srtt
+                }
+            })
+        })
+        session.lastLocationNotify = System.currentTimeMillis()
+    }
+
+    private fun add(entity: EntityAvatar) {
+        TODO("Not implemented yet")
+    }
+
     // enter post
     // get point
     // get area

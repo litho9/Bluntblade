@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger
 import com.google.protobuf.GeneratedMessageV3
 import dullblade.game.ClimateType
 import dullblade.game.PacketOpcodes
+import dullblade.interaction.PlayerLocationInfo
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.DefaultEventLoop
@@ -81,6 +82,7 @@ class World(
 abstract class GameSession {
     lateinit var account: Account
     var lastClientSeq = 10
+    open val srtt: Int = 10
 
     var world: World? = null
     lateinit var scene: Scene
@@ -89,6 +91,16 @@ abstract class GameSession {
     var curAvatar: EntityAvatar = curTeam[0]
     var enterSceneToken: Int = 0
     var peerId: Int = 0
+    var clientTime: Long = 0
+    var lastPingTime = System.currentTimeMillis()
+    var isPaused = false
+    var lastLocationNotify: Long = System.currentTimeMillis()
+    lateinit var locationInfo: PlayerLocationInfo
+    // playerLocationInfo {
+    //                        uid = it.account.uid
+    //                        pos = it.pos.toProto()
+    //                        rot = it.rot.toProto()
+    //                    }
 
     abstract fun send(vararg packets: BasePacket)
     abstract fun send(
@@ -104,8 +116,8 @@ class GameSessionKcp(val ukcp: Ukcp): GameSession() {
     override fun getHostAddress(): String =
         ukcp.user().remoteAddress.address.hostAddress
 
-//    val srtt: Int
-//        get() = ukcp.srtt()
+    override val srtt: Int
+        get() = ukcp.srtt()
 
     @Suppress("SENSELESS_COMPARISON")
     fun receive(buf: ByteBuf) {
