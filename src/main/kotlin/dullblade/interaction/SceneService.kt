@@ -248,13 +248,39 @@ object SceneService {
         session.lastLocationNotify = System.currentTimeMillis()
     }
 
-    private fun add(entity: EntityAvatar) {
-        TODO("Not implemented yet")
+    fun enterPost(session: GameSession) {
+        session.send(postEnterSceneRsp {
+            enterSceneToken = session.enterSceneToken
+        })
     }
 
-    // enter post
-    // get point
-    // get area
+    fun changeTime(session: GameSession, req: ChangeGameTimeReq) {
+        session.scene.time = req.gameTime % 1440
+        session.send(changeGameTimeRsp {
+            curGameTime = session.scene.time
+        })
+    }
+
+    fun pointGet(session: GameSession, req: GetScenePointReq) {
+        val points = scenePointDataFor(req.sceneId).points.keys.map { it.toInt() }
+        session.send(getScenePointRsp {
+            sceneId = req.sceneId
+            unlockedPointList.addAll(points)
+            unlockAreaList.addAll(1..8)
+        })
+    }
+
+    fun areaGet(session: GameSession, req: GetSceneAreaReq) {
+        val areaIds = (1..14) + (17..19) + (100..103) + 200 + 210 + 300
+        session.send(getSceneAreaRsp {
+            sceneId = req.sceneId
+            areaIdList.addAll(areaIds)
+            cityInfoList.addAll((1..3).map { cityInfo {
+                cityId = it
+                level = 1
+            } })
+        }, BasePacket.buildHeader(0))
+    }
     // destroy gadget notify
     // create gadget notify
     // entity drown
@@ -266,5 +292,8 @@ object SceneService {
     // personal scene jump
     // enter pathfinding
     // set entity client data notify
-    // change time
+
+    private fun add(entity: EntityAvatar) {
+        TODO("Not implemented yet")
+    }
 }

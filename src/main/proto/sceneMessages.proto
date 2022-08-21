@@ -1005,3 +1005,82 @@ message SceneEntityAppearNotify {
   VisionType appear_type = 8;
   uint32 param = 11;
 }
+
+// CmdId: 3344
+// EnetChannelId: 0
+// EnetIsReliable: true
+message PostEnterSceneRsp {
+  int32 retcode = 13;
+  uint32 enter_scene_token = 15;
+}
+
+// CmdId: 149
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message ChangeGameTimeReq {
+  uint32 game_time = 9;
+  bool is_force_set = 7;
+  uint32 extra_days = 6;
+}
+
+// CmdId: 182
+// EnetChannelId: 0
+// EnetIsReliable: true
+message ChangeGameTimeRsp {
+  int32 retcode = 7;
+  uint32 cur_game_time = 1;
+  uint32 extra_days = 2;
+}
+
+// CmdId: 230
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message GetScenePointReq {
+  uint32 scene_id = 4;
+  uint32 belong_uid = 10;
+}
+
+// CmdId: 297
+// EnetChannelId: 0
+// EnetIsReliable: true
+message GetScenePointRsp {
+  int32 retcode = 5;
+  uint32 scene_id = 12;
+  repeated uint32 unlocked_point_list = 14;
+  uint32 belong_uid = 15;
+  repeated uint32 unlock_area_list = 11;
+  repeated uint32 locked_point_list = 4;
+  repeated uint32 to_be_explore_dungeon_entry_list = 8;
+  repeated uint32 not_explored_dungeon_entry_list = 3;
+  repeated uint32 group_unlimit_point_list = 6;
+  repeated uint32 not_interact_dungeon_entry_list = 1;
+  repeated uint32 hide_point_list = 9;
+  repeated uint32 unhide_point_list = 7;
+}
+
+// CmdId: 238
+// EnetChannelId: 0
+// EnetIsReliable: true
+// IsAllowClient: true
+message GetSceneAreaReq {
+  uint32 scene_id = 4;
+  uint32 belong_uid = 3;
+}
+
+message CityInfo {
+  uint32 city_id = 1;
+  uint32 level = 2;
+  uint32 crystal_num = 3;
+}
+
+// CmdId: 206
+// EnetChannelId: 0
+// EnetIsReliable: true
+message GetSceneAreaRsp {
+  int32 retcode = 2;
+  uint32 scene_id = 13;
+  repeated uint32 area_id_list = 6;
+  repeated CityInfo city_info_list = 3;
+}

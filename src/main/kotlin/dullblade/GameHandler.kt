@@ -174,10 +174,14 @@ class EntityAvatar(
     }
 }
 
-class Scene(val id: Int) {
+class Scene(
+    val id: Int,
+    var time: Int
+) {
 //    fun broadcastPacket(packetGadgetInteractRsp: PacketGadgetInteractRsp): PacketGadgetInteractRsp {
 //        return packetGadgetInteractRsp // TODO("Not yet implemented")
 //    }
+
 
     val entities: MutableMap<Int, GameEntity> = ConcurrentHashMap()
 }
