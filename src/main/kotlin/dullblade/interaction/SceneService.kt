@@ -38,13 +38,13 @@ object SceneService {
             serverTime = System.currentTimeMillis()
         })
         fun onlineInfo(it: Account) = onlinePlayerInfo {
-            this.uid = it.uid
-            this.nickname = it.nickname
-            this.playerLevel = it.level
-            this.mpSettingType = MpSettingType.MP_SETTING_TYPE_ENTER_AFTER_APPLY
-            this.nameCardId = it.nameCardId
-            this.signature = it.signature
-            this.profilePicture = profilePicture { avatarId = it.headImage }
+            uid = it.uid
+            nickname = it.nickname
+            playerLevel = it.level
+            mpSettingType = MpSettingType.MP_SETTING_TYPE_ENTER_AFTER_APPLY
+            nameCardId = it.nameCardId
+            signature = it.signature
+            profilePicture = profilePicture { avatarId = it.headImage }
             curPlayerNumInWorld = session.world?.accounts?.size ?: 1
         }
         session.send(worldPlayerInfoNotify {
@@ -281,14 +281,38 @@ object SceneService {
             } })
         }, BasePacket.buildHeader(0))
     }
-    // destroy gadget notify
-    // create gadget notify
-    // entity drown
-    // transition to point
+
+    fun gadgetCreated(session: GameSession, req: EvtCreateGadgetNotify) {
+        session.scene.entities[req.entityId]?.let { return } // don't add duplicates
+        val entity = EntityClientGadget(session.account.uid, session.peerId, req)
+        session.scene.entities[req.entityId] = entity
+//        gadget.owner.teamManager.gadgets.add(gadget) // TODO Add to owner's gadget list
+        session.world?.players?.filter { it != session }?.forEach {
+            it.send(sceneEntityAppearNotify {
+                appearType = VisionType.VISION_TYPE_BORN
+                entityList.add(entity.toProto())
+            })
+        }
+    }
+
+    fun gadgetDestroyed(session: GameSession, req: EvtDestroyGadgetNotify) {
+        val gadget = (session.scene.entities[req.entityId] ?: return) as EntityClientGadget
+        session.scene.entities.remove(gadget.id)
+//        entity.owner.teamManager.gadgets.remove(entity) // TODO Remove from owner's gadget list
+        session.world?.players?.filter { it.account.uid != gadget.ownerId }?.forEach {
+            it.send(sceneEntityDisappearNotify {
+                disappearType = VisionType.VISION_TYPE_DIE
+                entityList.add(gadget.id)
+            })
+        }
+    }
+
+    // vehicleCreate
+    // drown
+    // teleport
     // AI sync
     // sit down
     // stand up
-    // vehicle create
     // personal scene jump
     // enter pathfinding
     // set entity client data notify

@@ -137,6 +137,7 @@ class Avatar(
 }
 
 abstract class GameEntity(
+    val id: Int,
     var lastMoveSceneTimeMs: Int = 0,
     val lastMoveReliableSeq: Int = 0
 ) {
