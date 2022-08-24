@@ -8,6 +8,7 @@ import dullblade.game.PlayerProperty
 import dullblade.game.WatcherTriggerType
 import dullblade.inventory.InventoryService
 import dullblade.queue.QueueMessages.*
+import java.time.Instant
 
 object ForgeQueueService {
     private fun queueCountFor(ar: Int) =
@@ -25,11 +26,9 @@ object ForgeQueueService {
         InventoryService.pay(session, data.materials, data.moraCost)
         session.account.properties.add(PlayerProperty.FORGE_POINT, -requiredPoints)
 
-        var timestamp = (System.currentTimeMillis() / 1000).toInt()
-        val timestamps = (1..req.forgeCount).map {
-            timestamp += data.duration
-            timestamp
-        }
+        val timestamp = Instant.now().epochSecond.toInt()
+        val timestamps = (1..req.forgeCount)
+            .map { timestamp + data.duration * it }
         session.account.forgeQueues.add(ForgeQueue(req.forgeId, req.avatarId, timestamps))
 
         session.send(PacketForgeQueueDataNotify(session.account.forgeQueues))
@@ -51,7 +50,7 @@ object ForgeQueueService {
 
     fun manipulate(session: GameSession, req: ForgeQueueManipulateReq) {
         val id: Int = req.forgeQueueId
-        val now: Int = (System.currentTimeMillis() / 1000).toInt()
+        val now = Instant.now().epochSecond.toInt()
         val forge = session.account.forgeQueues[id - 1]
         val finishCount = forge.timestamps.count { it <= now }
         val data: ForgeData = forgeData[forge.id]!!
@@ -85,7 +84,7 @@ object ForgeQueueService {
     }
 
     fun tick(session: GameSession, lastTick: Int) {
-        val now = (System.currentTimeMillis() / 1000).toInt()
+        val now = Instant.now().epochSecond
         if (session.account.forgeQueues.flatMap { it.timestamps }
             .any { it in (lastTick + 1)..now })
             session.send(PacketForgeQueueDataNotify(session.account.forgeQueues))

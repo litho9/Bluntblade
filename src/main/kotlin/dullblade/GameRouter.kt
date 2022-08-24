@@ -49,7 +49,8 @@ object GameRouter {
         PacketOpcodes.PostEnterSceneReq -> SceneService.enterPost(session)
         PacketOpcodes.ChangeGameTimeReq -> SceneService.changeTime(session, ChangeGameTimeReq.parseFrom(payload))
         PacketOpcodes.GetScenePointReq -> SceneService.pointGet(session, GetScenePointReq.parseFrom(payload))
-        PacketOpcodes.GetSceneAreaReq -> SceneService.areaGet(session, GetSceneAreaReq.parseFrom(payload))
+        PacketOpcodes.EvtCreateGadgetNotify -> SceneService.gadgetCreated(session, EvtCreateGadgetNotify.parseFrom(payload))
+        PacketOpcodes.EvtDestroyGadgetNotify -> SceneService.gadgetDestroyed(session, EvtDestroyGadgetNotify.parseFrom(payload))
         else -> null
     }
 }

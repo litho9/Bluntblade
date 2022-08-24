@@ -5,9 +5,10 @@ import dullblade.ForgeQueue
 import dullblade.GameItem
 import dullblade.PacketMessages.Retcode
 import dullblade.inventory.itemParam
+import java.time.Instant
 
 private fun packetFor(queues: List<ForgeQueue>): Map<Int, QueueMessages.ForgeQueueData> {
-    val now = (System.currentTimeMillis() / 1000).toInt()
+    val now = Instant.now().epochSecond
     return queues.mapIndexed { i, q -> i to forgeQueueData {
         queueId = i + 1
         forgeId = q.id
