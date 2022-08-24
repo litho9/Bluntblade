@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dullblade.inventory";
+option java_package = "bluntblade.inventory";
 
 import "inventoryMessages.proto"; // Item
 import "packetMessages.proto"; // ServerBuff

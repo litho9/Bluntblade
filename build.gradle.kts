@@ -12,7 +12,7 @@ plugins {
     application
 }
 
-group = "me.dull"
+group = "me.blunt"
 version = "1.0-SNAPSHOT"
 
 repositories {

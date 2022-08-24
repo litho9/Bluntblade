@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dullblade.queue";
+option java_package = "bluntblade.queue";
 
 import "inventoryMessages.proto"; // ItemParam
 

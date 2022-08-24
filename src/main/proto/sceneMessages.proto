@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dullblade.interaction";
+option java_package = "bluntblade.interaction";
 option java_multiple_files = true;
 
 import "inventoryMessages.proto"; // Item

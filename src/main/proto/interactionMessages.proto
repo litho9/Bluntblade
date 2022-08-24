@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dullblade.interaction";
+option java_package = "bluntblade.interaction";
 
 enum InterOpType {
   INTER_OP_TYPE_FINISH = 0;

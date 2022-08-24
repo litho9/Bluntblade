@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dullblade.account";
+option java_package = "bluntblade.account";
 
 // CmdId: 109
 // EnetChannelId: 0

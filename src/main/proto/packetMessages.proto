@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "dullblade";
+option java_package = "bluntblade";
 
 message PacketHead {
   uint32 client_sequence_id = 3;
