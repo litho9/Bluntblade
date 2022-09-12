@@ -7,6 +7,7 @@ import bluntblade.PacketMessages.Retcode
 import bluntblade.game.PlayerProperty
 import bluntblade.game.WatcherTriggerType
 import bluntblade.inventory.InventoryService
+import bluntblade.inventory.itemParam
 import bluntblade.queue.QueueMessages.*
 import java.time.Instant
 
@@ -16,12 +17,12 @@ object ForgeQueueService {
 
     fun start(session: GameSession, req: ForgeStartReq) {
         if (session.account.forgeQueues.size >= queueCountFor(session.account.level))
-            return session.send(PacketForgeStartRsp(Retcode.RET_FORGE_QUEUE_FULL))
+            return session.send(forgeStartRsp { retcode = Retcode.RET_FORGE_QUEUE_FULL.number })
 
         val data: ForgeData = forgeData[req.forgeId]!!
         val requiredPoints = data.points * req.forgeCount
         if (requiredPoints > session.account.properties[PlayerProperty.FORGE_POINT])
-            return session.send(PacketForgeStartRsp(Retcode.RET_FORGE_POINT_NOT_ENOUGH))
+            return session.send(forgeStartRsp { retcode = Retcode.RET_FORGE_POINT_NOT_ENOUGH.number })
 
         InventoryService.pay(session, data.materials, data.moraCost)
         session.account.properties.add(PlayerProperty.FORGE_POINT, -requiredPoints)
@@ -31,22 +32,20 @@ object ForgeQueueService {
             .map { timestamp + data.duration * it }
         session.account.forgeQueues.add(ForgeQueue(req.forgeId, req.avatarId, timestamps))
 
-        session.send(PacketForgeQueueDataNotify(session.account.forgeQueues))
-        session.send(PacketForgeStartRsp(Retcode.RET_SUCC))
+        session.send(forgeQueueDataNotify {
+            forgeQueueMap.putAll(packetFor(session.account.forgeQueues)) })
+        session.send(forgeStartRsp { retcode = Retcode.RET_SUCC.number })
     }
 
-    fun list(session: GameSession) {
-        session.send(PacketForgeGetQueueDataRsp(
-            queueCountFor(session.account.level),
-            session.account.forgeQueues))
-    }
+    fun list(session: GameSession) = session.send(forgeGetQueueDataRsp {
+        retcode = Retcode.RET_SUCC.number
+        maxQueueNum = queueCountFor(session.account.level)
+        forgeQueueMap.putAll(packetFor(session.account.forgeQueues)) })
 
-    fun notify(session: GameSession) {
-        session.send(PacketForgeDataNotify(
-            queueCountFor(session.account.level),
-            session.account.forgeQueues,
-            session.account.unlockedForgingBlueprints))
-    }
+    fun notify(session: GameSession) = session.send(forgeDataNotify {
+        forgeIdList.addAll(session.account.unlockedForgingBlueprints)
+        maxQueueNum = queueCountFor(session.account.level)
+        forgeQueueMap.putAll(packetFor(session.account.forgeQueues)) })
 
     fun manipulate(session: GameSession, req: ForgeQueueManipulateReq) {
         val id: Int = req.forgeQueueId
@@ -64,8 +63,13 @@ object ForgeQueueService {
 
             val allDone = forge.timestamps.last() < now
             if (allDone) session.account.forgeQueues.removeAt(id - 1)
-            session.send(PacketForgeQueueDataNotify(session.account.forgeQueues, if (allDone) id else null))
-            session.send(PacketForgeQueueManipulateRsp(ForgeQueueManipulateType.RECEIVE, listOf(item)))
+            session.send(forgeQueueDataNotify {
+                if (allDone) removedForgeQueueList.add(id)
+                forgeQueueMap.putAll(packetFor(session.account.forgeQueues)) })
+            session.send(forgeQueueManipulateRsp {
+                retcode = Retcode.RET_SUCC.number
+                manipulateType = ForgeQueueManipulateType.RECEIVE
+                outputItemList.add(itemParam { itemId = item.id; count = item.count }) })
         } else { // CANCEL
             if (finishCount > 0) return // Make sure there are no unfinished items.
             val remainingCount = forge.timestamps.count { it > now }
@@ -78,15 +82,34 @@ object ForgeQueueService {
             session.account.properties.add(PlayerProperty.FORGE_POINT, data.points * remainingCount)
             session.account.forgeQueues.removeAt(id - 1)
 
-            session.send(PacketForgeQueueDataNotify(session.account.forgeQueues, id))
-            session.send(PacketForgeQueueManipulateRsp(ForgeQueueManipulateType.CANCEL, refund = refund))
+            session.send(forgeQueueDataNotify {
+                removedForgeQueueList.add(id)
+                forgeQueueMap.putAll(packetFor(session.account.forgeQueues)) })
+            session.send(forgeQueueManipulateRsp {
+                retcode = Retcode.RET_SUCC.number
+                manipulateType = ForgeQueueManipulateType.CANCEL
+                returnItemList.addAll(refund.map { itemParam { itemId = it.id; count = it.count } }) })
         }
     }
 
     fun tick(session: GameSession, lastTick: Int) {
         val now = Instant.now().epochSecond
         if (session.account.forgeQueues.flatMap { it.timestamps }
-            .any { it in (lastTick + 1)..now })
-            session.send(PacketForgeQueueDataNotify(session.account.forgeQueues))
+                .any { it in (lastTick + 1)..now })
+            session.send(forgeQueueDataNotify {
+                forgeQueueMap.putAll(packetFor(session.account.forgeQueues)) })
+    }
+
+    private fun packetFor(queues: List<ForgeQueue>): Map<Int, ForgeQueueData> {
+        val now = Instant.now().epochSecond
+        return queues.mapIndexed { i, q -> i to forgeQueueData {
+            queueId = i + 1
+            forgeId = q.id
+            finishCount = q.timestamps.count { it <= now }
+            unfinishCount = q.timestamps.count { it > now }
+            totalFinishTimestamp = q.timestamps.last()
+            nextFinishTimestamp = q.timestamps.first { it > now }
+            avatarId = q.avatarId
+        } }.toMap()
     }
 }
