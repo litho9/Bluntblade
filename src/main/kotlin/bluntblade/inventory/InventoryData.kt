@@ -20,11 +20,11 @@ inline fun <reified T> resource(path: String) = FileInputStream(
 val unlockMaxLevel = arrayOf(20, 40, 50, 60, 70, 80)
 
 @Serializable
-data class WeaponLevelData(val Level: Int, val RequiredExps: List<Int>)
+data class WeaponLevelData(val level: Int, val requiredExps: List<Int>)
 
 val weaponTotalExpData: List<List<Int>> by lazy {
     val data = resource<List<WeaponLevelData>>("ExcelBinOutput/WeaponLevelExcelConfigData.json")
-    val newData = (0..4).map { i -> data.map { it.RequiredExps[i] } }
+    val newData = (0..4).map { i -> data.map { it.requiredExps[i] } }
 
     newData.map { rankData ->
         var totalExp = 0
@@ -37,13 +37,13 @@ val weaponTotalExpData: List<List<Int>> by lazy {
 
 @Serializable
 data class ReliquaryAffixData(
-    val Id: Int,
-    val DepotId: Int,
-    val GroupId: Int,
-    val PropType: FightProperty,
-    val PropValue: Float,
-    val Weight: Double,
-    val UpgradeWeight: Int
+    val id: Int,
+    val depotId: Int,
+    val groupId: Int,
+    val propType: FightProperty,
+    val propValue: Float,
+    val weight: Double,
+    val upgradeWeight: Int
 )
 
 val reliquaryAffixData: List<ReliquaryAffixData> =
@@ -51,11 +51,11 @@ val reliquaryAffixData: List<ReliquaryAffixData> =
 
 @Serializable
 data class ReliquaryMainPropData /*: GameResource()*/ (
-    val Id: Int,
-    val PropDepotId: Int,
-    val PropType: FightProperty,
-    val AffixName: String,
-    val Weight: Int = 1
+    val id: Int,
+    val propDepotId: Int,
+    val propType: FightProperty,
+    val affixName: String,
+    val weight: Int = 1
 )
 
 val reliquaryMainPropData: List<ReliquaryMainPropData> =
@@ -64,35 +64,35 @@ val reliquaryMainPropData: List<ReliquaryMainPropData> =
 @Serializable
 data class AddProps(val PropType: FightProperty = FightProperty.FIGHT_PROP_NONE, val Value: Float = 0f)
 @Serializable
-data class ReliquaryLevelData(val Rank: Int = 0, val Level: Int, val Exp: Int = 0, val AddProps: List<AddProps>)
+data class ReliquaryLevelData(val rank: Int = 0, val level: Int, val exp: Int = 0, val addProps: List<AddProps>)
 
 val relicLevelData: Map<Int, List<ReliquaryLevelData>> by lazy {
     resource<List<ReliquaryLevelData>>("ExcelBinOutput/ReliquaryLevelExcelConfigData.json")
-        .groupBy { it.Rank }
+        .groupBy { it.rank }
 }
 val relicTotalExpData: List<List<Int>> by lazy {
     relicLevelData.values.map { rankData ->
         var totalExp = 0
-        rankData.map { data -> totalExp += data.Exp; totalExp }
+        rankData.map { data -> totalExp += data.exp; totalExp }
     }
 }
 
 @Serializable
 data class WeaponPropertyData(
-    val PropType: FightProperty = FightProperty.FIGHT_PROP_NONE,
-    val InitValue: Float = 0f,
-    val Type: String
+    val propType: FightProperty = FightProperty.FIGHT_PROP_NONE,
+    val initValue: Float = 0f,
+    val type: String
 )
 @Serializable
 data class WeaponData(
-    @SerialName("Id") val id: Int,
-    @SerialName("RankLevel") val rank: Int,
-    @SerialName("WeaponPromoteId") val promoteId: Int,
-    @SerialName("SkillAffix") val skillAffixes: List<Int>,
-    @SerialName("WeaponBaseExp") val baseExp: Int,
+    val id: Int,
+    @SerialName("rankLevel") val rank: Int,
+    @SerialName("weaponPromoteId") val promoteId: Int,
+    @SerialName("skillAffix") val skillAffixes: List<Int>,
+    @SerialName("weaponBaseExp") val baseExp: Int,
     // private val storyId = 0
-    @SerialName("AwakenCosts") val awakenCosts: List<Int>,
-    @SerialName("WeaponProp") val props: List<WeaponPropertyData>
+    val awakenCosts: List<Int>,
+    @SerialName("weaponProp") val props: List<WeaponPropertyData>
 )
 
 val weaponData: Map<Int, WeaponData> by lazy {
@@ -101,16 +101,14 @@ val weaponData: Map<Int, WeaponData> by lazy {
 }
 
 @Serializable
-data class CostItem(
-    @SerialName("Id") val id: Int = 0,
-    @SerialName("Count") val count: Int = 0)
+data class CostItem(val id: Int = 0, val count: Int = 0)
 @Serializable
 data class WeaponPromoteData(
-    @SerialName("WeaponPromoteId") val id: Int,
-    @SerialName("CostItems") val costItems: List<CostItem>,
-    @SerialName("CoinCost") val costCoin: Int = 0,
-    @SerialName("UnlockMaxLevel") val unlockMaxLevel: Int,
-    @SerialName("AddProps") val props: List<AddProps>,
+    @SerialName("weaponPromoteId") val id: Int,
+    val costItems: List<CostItem>,
+    @SerialName("coinCost") val costCoin: Int = 0,
+    val unlockMaxLevel: Int,
+    @SerialName("addProps") val props: List<AddProps>,
 )
 
 val weaponPromoteData by lazy {
@@ -119,25 +117,23 @@ val weaponPromoteData by lazy {
 }
 
 @Serializable
-data class WeaponCurveInfoData(val Type: String, val Value: Float)
+data class WeaponCurveInfoData(val type: String, val value: Float)
 @Serializable
-data class WeaponCurveData(
-    val CurveInfos: List<WeaponCurveInfoData>,
-)
+data class WeaponCurveData(val curveInfos: List<WeaponCurveInfoData>)
 val weaponCurveData by lazy {
     resource<List<WeaponCurveData>>("ExcelBinOutput/WeaponCurveExcelConfigData.json")
 }
 
 @Serializable
 data class RelicData(
-    @SerialName("Id") val id: Int,
-    @SerialName("EquipType") val type: EquipType,
-    @SerialName("RankLevel") val rank: Int,
-    @SerialName("SetId") val setId: Int = 0,
-    @SerialName("MaxLevel") val maxLevel: Int,
-    @SerialName("MainPropDepotId") val mainPropDepotId: Int,
-    @SerialName("AppendPropDepotId") val depotId: Int,
-    @SerialName("BaseConvExp") val baseConvExp: Int
+    val id: Int,
+    @SerialName("equipType") val type: EquipType,
+    @SerialName("rankLevel") val rank: Int,
+    val setId: Int = 0,
+    val maxLevel: Int,
+    val mainPropDepotId: Int,
+    @SerialName("appendPropDepotId") val depotId: Int,
+    val baseConvExp: Int
 )
 //        "ShowPic": "Eff_UI_RelicIcon_10000_4",
 //        "AddPropLevels": [],

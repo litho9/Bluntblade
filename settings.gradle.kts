@@ -1,3 +1,3 @@
 
-rootProject.name = "Dullblade"
+rootProject.name = "Bluntblade"
 

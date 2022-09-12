@@ -137,7 +137,7 @@ class Avatar(
 }
 
 abstract class GameEntity(
-//    val id: Int,
+    val id: Int,
     var lastMoveSceneTimeMs: Int = 0,
     val lastMoveReliableSeq: Int = 0
 ) {
@@ -146,15 +146,15 @@ abstract class GameEntity(
     }
 }
 class EntityWeapon(
-    val id: Int,
+    id: Int,
     val weapon: Weapon,
-) : GameEntity()
+) : GameEntity(id)
 class EntityAvatar(
-    val id: Int,
+    id: Int,
     val avatar: Avatar,
     val wield: EntityWeapon,
     val lifeState: AvatarService.LifeState,
-) : GameEntity() {
+) : GameEntity(id) {
     override fun toProto() = sceneEntityInfo {
         entityId = id
         entityType = ProtEntityType.PROT_ENTITY_TYPE_AVATAR

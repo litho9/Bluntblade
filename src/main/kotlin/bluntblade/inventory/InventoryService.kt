@@ -188,23 +188,24 @@ object InventoryService {
 
     private fun rollSubStat(relic: Relic, data: RelicData) {
         val affixList = if (relic.appendPropIdList.size == 4)
-            relic.appendPropIdList.map { id -> reliquaryAffixData.find { it.Id == id }!! }
+            relic.appendPropIdList.map { id -> reliquaryAffixData.find { it.id == id }!! }
         else {
-            val mainProp = reliquaryMainPropData.find { it.Id == relic.mainPropId }!!
-            reliquaryAffixData.filter { it.DepotId == data.depotId
-                    && it.PropType != mainProp.PropType
-                    && !relic.appendPropIdList.contains(it.Id) }
+            val mainProp = reliquaryMainPropData.find { it.id == relic.mainPropId }!!
+            reliquaryAffixData.filter { it.depotId == data.depotId
+                    && it.propType != mainProp.propType
+                    && !relic.appendPropIdList.contains(it.id) }
         }
-        val affix = Rng.weighted(affixList, ReliquaryAffixData::Weight)
-        relic.appendPropIdList.add(affix.Id)
+        val affix = Rng.weighted(affixList, ReliquaryAffixData::weight)
+        relic.appendPropIdList.add(affix.id)
     }
 
     fun pay(session: GameSession, costItems: List<CostItem>, coinCost: Int = 0, count: Int = 1) {
+        val costs = costItems.filter { it.id > 0 }
         val inv = session.account.inventory
-        if (costItems.any { inv.materials[it.id]!!.count < it.count * count } || coinCost > inv.mora)
+        if (costs.any { inv.materials[it.id]!!.count < it.count * count } || coinCost > inv.mora)
             throw IllegalArgumentException("Can't pay cost items")
         inv.mora -= coinCost
-        for (cost in costItems) {
+        for (cost in costs) {
             val material = inv.materials[cost.id]!!
             BattlePassService.trigger(
                 WatcherTriggerType.TRIGGER_COST_MATERIAL,

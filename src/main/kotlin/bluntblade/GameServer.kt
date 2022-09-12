@@ -87,8 +87,10 @@ abstract class GameSession {
     var world: World? = null
     lateinit var scene: Scene
     var curTeamId: Int = 0
-    lateinit var curTeam: List<EntityAvatar>
-    var curAvatar: EntityAvatar = curTeam[0]
+    val curTeam: List<EntityAvatar> = listOf()
+    var curAvatarId = 0
+    val curAvatar: EntityAvatar
+        get() = curTeam[curAvatarId]
     var enterSceneToken: Int = 0
     var peerId: Int = 0
     var clientTime: Long = 0

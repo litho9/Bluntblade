@@ -183,14 +183,14 @@ object AvatarService {
         val relics = avatar.relicGuids.mapNotNull { session.account.inventory.relics[it] }
         relics.forEach { relic ->
             val relicData = relicData[relic.id]!!
-            val mainPropData = reliquaryMainPropData.find { it.Id == relic.mainPropId }!!
+            val mainPropData = reliquaryMainPropData.find { it.id == relic.mainPropId }!!
             val mainProp = relicLevelData[relicData.rank]!![relic.level - 1].AddProps
-                .find { it.PropType == mainPropData.PropType }!!
+                .find { it.PropType == mainPropData.propType }!!
             props.add(mainProp.PropType, mainProp.Value)
 
             relic.appendPropIdList.forEach {
                 val affixes = reliquaryAffixData[it]
-                props.add(affixes.PropType, affixes.PropValue)
+                props.add(affixes.propType, affixes.propValue)
             }
         }
         relics.groupBy { relicData[it.id]?.setId }.forEach { (setId, u) ->
