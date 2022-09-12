@@ -95,46 +95,6 @@ class PacketAvatarUpgradeRsp(
     curFightPropMap.putAll(avatar.fightProperties)
 })
 
-class PacketAvatarSkillChangeNotify(
-    avatar: Avatar, skillId: Int, oldLevel: Int, curLevel: Int
-) : BasePacket(avatarSkillChangeNotify {
-    avatarGuid = avatar.guid
-//    entityId = avatar.entityId // TODO
-    skillDepotId = avatar.skillDepotId
-    avatarSkillId = skillId
-    this.oldLevel = oldLevel
-    this.curLevel = curLevel
-})
-
-class PacketAvatarSkillUpgradeRsp(
-    avatar: Avatar, skillId: Int, oldLevel: Int, curLevel: Int
-) : BasePacket(avatarSkillUpgradeRsp {
-    avatarGuid = avatar.guid
-    avatarSkillId = skillId
-    this.oldLevel = oldLevel
-    this.curLevel = curLevel
-})
-
-class PacketAvatarUnlockTalentNotify(avatar: Avatar, talentId: Int) :
-    BasePacket(avatarUnlockTalentNotify {
-    avatarGuid = avatar.guid
-//    entityId = avatar.entityId // TODO
-    this.talentId = talentId
-    skillDepotId = avatar.skillDepotId
-})
-
-class PacketUnlockAvatarTalentRsp(avatar: Avatar, talentId: Int)
-    : BasePacket(unlockAvatarTalentRsp { avatarGuid = avatar.guid; this.talentId = talentId })
-
-class PacketProudSkillExtraLevelNotify(
-    avatar: Avatar, talentIndex: Int
-) : BasePacket(proudSkillExtraLevelNotify {
-    avatarGuid = avatar.guid
-    talentType = 3 // Talent type = 3 "AvatarSkill"
-    this.talentIndex = talentIndex
-    extraLevel = 3
-})
-
 fun toFetterProto(avatar: Avatar) = avatarFetterInfo {
     expLevel = totalFetterExpData.indexOfFirst { it > avatar.fetterTotalExp }
     expNumber = avatar.fetterTotalExp - totalFetterExpData[expLevel - 1]
@@ -143,10 +103,6 @@ fun toFetterProto(avatar: Avatar) = avatarFetterInfo {
         .map { fetterData { fetterId = it; fetterState = 3 /* FINISH*/ } })
     if (expLevel == 10) rewardedFetterLevelList.add(10)
 }
-
-class PacketAvatarFetterDataNotify(avatar: Avatar)
-    : BasePacket(avatarFetterDataNotify {
-            fetterInfoMap[avatar.guid] = toFetterProto(avatar) })
 
 class PacketStoreWeightLimitNotify
     : BasePacket(storeWeightLimitNotify {

@@ -57,8 +57,9 @@ object AvatarService {
     fun upgradeFetterLevel(session: GameSession, avatar: Avatar, expGain: Int) {
         avatar.fetterTotalExp = (avatar.fetterTotalExp + expGain).coerceAtMost(maxFetterExp)
 //        avatar.save()
-        session.send(PacketAvatarPropNotify(avatar),
-            PacketAvatarFetterDataNotify(avatar))
+        session.send(PacketAvatarPropNotify(avatar))
+        session.send(avatarFetterDataNotify {
+            fetterInfoMap[avatar.guid] = toFetterProto(avatar) })
     }
 
     fun upgradeSkill(session: GameSession, req: AvatarSkillUpgradeReq) {
@@ -71,20 +72,34 @@ object AvatarService {
         avatar.skillLevels[req.avatarSkillId] = level
 //        avatar.save()
 
-        session.send(PacketAvatarSkillChangeNotify(avatar, req.avatarSkillId, oldLevel, level),
-            PacketAvatarSkillUpgradeRsp(avatar, req.avatarSkillId, oldLevel, level))
+        session.send(avatarSkillChangeNotify {
+            avatarGuid = avatar.guid
+//    entityId = avatar.entityId // TODO
+            skillDepotId = avatar.skillDepotId
+            avatarSkillId = req.avatarSkillId
+            this.oldLevel = oldLevel
+            curLevel = level
+        })
+        session.send(avatarSkillUpgradeRsp {
+            avatarGuid = avatar.guid
+            avatarSkillId = req.avatarSkillId
+            this.oldLevel = oldLevel
+            curLevel = level
+        })
     }
 
     fun unlockConstellation(session: GameSession, req: UnlockAvatarTalentReq) {
         val avatar = session.account.avatars[req.avatarGuid]!!
-//        val nextTalentId = avatar.promoteId * 10 + avatar.constellations.size + 1
         val talentData = avatarTalentData[req.talentId]!!
-
-        InventoryService.pay(session, listOf(CostItem(talentData.mainCostItemId, 1)), 0)
+        InventoryService.pay(session, listOf(CostItem(talentData.mainCostItemId)))
         avatar.constellations.add(req.talentId)
-
-        session.send(PacketAvatarUnlockTalentNotify(avatar, req.talentId),
-            PacketUnlockAvatarTalentRsp(avatar, req.talentId))
+        session.send(avatarUnlockTalentNotify {
+            avatarGuid = avatar.guid
+//    entityId = avatar.entityId // TODO
+            talentId = req.talentId
+            skillDepotId = avatar.skillDepotId
+        })
+        session.send(unlockAvatarTalentRsp { avatarGuid = avatar.guid; talentId = req.talentId })
 
         extraConstellationData[talentData.openConfig]!!.forEach {
             if (it is AvatarTalentDataCharge) {
@@ -99,7 +114,12 @@ object AvatarService {
                 // Check if new constellation adds +3 to a skill level
                 val proudSkillGroupId = avatar.promoteId * 100 + 30 + it.talentIndex
                 avatar.proudSkillBonusMap[proudSkillGroupId] = 3
-                session.send(PacketProudSkillExtraLevelNotify(avatar, it.talentIndex))
+                session.send(proudSkillExtraLevelNotify {
+                    avatarGuid = avatar.guid
+                    talentType = 3 // Talent type = 3 "AvatarSkill"
+                    talentIndex = it.talentIndex
+                    extraLevel = 3
+                })
             }
         }
         recalcStats(session, avatar)// , forceSendAbilityChange=true
@@ -113,7 +133,7 @@ object AvatarService {
             MC_FEMALE_ID -> 704
             else -> data.skillDepotId
         }
-        val weapon = Weapon(account.newGuid(), data.InitialWeapon)
+        val weapon = Weapon(account.newGuid(), data.initialWeapon)
         account.inventory.weapons[weapon.guid] = weapon
         val avatar = Avatar(account.newGuid(), id, skillDepotId, data.promoteId, weapon.guid)
         weapon.equipCharacterId = avatar.guid
@@ -123,7 +143,6 @@ object AvatarService {
         val skillDepot = avatarSkillDepotData[skillDepotId]!!
         avatar.skillLevels.putAll(skillDepot.skillIds.filter { it > 0 }.associateBy { it })
         avatar.skillLevels[skillDepot.burstId] = 1
-
         avatar.proudSkillIds.add(proudSkillIdFor(skillDepotId, 0)!!)
     }
 
@@ -131,9 +150,7 @@ object AvatarService {
         val avatar = session.account.avatars[guid]!!
         if (avatar.prop(CUR_HP) > 0f) return false
         avatar.prop(CUR_HP, avatar.prop(MAX_HP) * .1f)
-        session.send(PacketAvatarFightPropUpdateNotify(avatar, CUR_HP))
-        session.send(PacketAvatarLifeStateChangeNotify(avatar, LifeState.ALIVE.value))
-        return true
+        return lifeStateNotify(session, avatar)
     }
 
     fun heal(session: GameSession, guid: Long, satiationParams: List<Int>): Boolean {
@@ -144,8 +161,16 @@ object AvatarService {
         val (healRate, healAmount) = satiationParams
         val heal = maxHp * healRate / 100 + healAmount / 100
         avatar.prop(CUR_HP, (curHp + heal).coerceAtMost(maxHp))
-        session.send(PacketAvatarFightPropUpdateNotify(avatar, CUR_HP))
-        session.send(PacketAvatarLifeStateChangeNotify(avatar, LifeState.ALIVE.value))
+        return lifeStateNotify(session, avatar)
+    }
+
+    private fun lifeStateNotify(session: GameSession, avatar: Avatar): Boolean {
+        session.send(avatarFightPropUpdateNotify {
+            avatarGuid = avatar.guid
+            fightPropMap.put(CUR_HP.id, avatar.prop(CUR_HP)) })
+        session.send(avatarLifeStateChangeNotify {
+            avatarGuid = avatar.guid
+            lifeState = LifeState.ALIVE.value })
         return true
     }
 
@@ -153,26 +178,26 @@ object AvatarService {
         session.account.avatars[guid]?.let { recalcStats(session, it) }
     }
 
-    fun recalcStats(session: GameSession, avatar: Avatar) {
+    private fun recalcStats(session: GameSession, avatar: Avatar) {
         avatar.extraAbilityEmbryos.clear()
 
         val data = avatarData[avatar.id]!!
         val (hpCurve, atkCurve, defCurve) = data.curves
             .map { avatarCurveData[it.Type]!![avatar.level - 1] }
         val props = StatMap(mutableMapOf(
-            BASE_HP to data.HpBase * hpCurve,
-            BASE_ATK to data.AttackBase * atkCurve,
-            BASE_DEF to data.DefenseBase * defCurve,
-            CRITICAL to data.Critical,
-            CRITICAL_HURT to data.CriticalHurt,
+            BASE_HP to data.hpBase * hpCurve,
+            BASE_ATK to data.attackBase * atkCurve,
+            BASE_DEF to data.defenseBase * defCurve,
+            CRITICAL to data.critical,
+            CRITICAL_HURT to data.criticalHurt,
             ER to 1f,
         ))
 
         val promoteData = avatarPromoteData[avatar.promoteId]!![avatar.promoteLevel]
-        promoteData.addProps.forEach { props.add(it.PropType, it.Value) }
+        promoteData.addProps.forEach { props.add(it.propType, it.value) }
 
         val skillDepot = avatarSkillDepotData[avatar.skillDepotId]
-        val burstData = avatarSkillData[skillDepot?.energySkill]
+        val burstData = avatarSkillData[skillDepot?.burstId]
         if (burstData != null) {
             val elementType = ElementType.valueOf(burstData.element)
             val curEr = elementType.curEnergyProp
@@ -184,9 +209,9 @@ object AvatarService {
         relics.forEach { relic ->
             val relicData = relicData[relic.id]!!
             val mainPropData = reliquaryMainPropData.find { it.id == relic.mainPropId }!!
-            val mainProp = relicLevelData[relicData.rank]!![relic.level - 1].AddProps
-                .find { it.PropType == mainPropData.propType }!!
-            props.add(mainProp.PropType, mainProp.Value)
+            val mainProp = relicLevelData[relicData.rank]!![relic.level - 1].addProps
+                .find { it.propType == mainPropData.propType }!!
+            props.add(mainProp.propType, mainProp.value)
 
             relic.appendPropIdList.forEach {
                 val affixes = reliquaryAffixData[it]
@@ -197,28 +222,28 @@ object AvatarService {
             val relicSetData = reliquarySetData[setId]!!
             val affixes = List(relicSetData.setNeedNums.filter { it <= u.size }.size) { idx ->
                 equipAffixData[relicSetData.equipAffixId]!![idx] }
-            affixes.flatMap { it.props }.forEach { props.add(it.PropType, it.Value) }
+            affixes.flatMap { it.props }.forEach { props.add(it.propType, it.value) }
             avatar.extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
         }
 
         val weapon = session.account.inventory.weapons[avatar.weaponGuid]!!
         val weaponData = weaponData[weapon.id]!!
-        val curveInfos = weaponCurveData[weapon.level - 1].CurveInfos
+        val curveInfos = weaponCurveData[weapon.level - 1].curveInfos
         weaponData.props.forEach { prop ->
-            val info = curveInfos.find { it.Type == prop.Type }!!
-            props.add(prop.PropType, prop.InitValue * info.Value)
+            val info = curveInfos.find { it.type == prop.type }!!
+            props.add(prop.propType, prop.initValue * info.value)
         }
         weaponPromoteData[weaponData.promoteId]!![weapon.promoteLevel - 1]
-            .props.filter { it.Value > 0 }
-            .forEach { props.add(it.PropType, it.Value) }
+            .props.filter { it.value > 0 }
+            .forEach { props.add(it.propType, it.value) }
         val affixes = weapon.affixIds.map { equipAffixData[it]!![weapon.refinement - 1] }
-        affixes.flatMap { it.props }.forEach { props.add(it.PropType, it.Value) }
+        affixes.flatMap { it.props }.forEach { props.add(it.propType, it.value) }
         avatar.extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
 
-        val proudSkillList = skillDepot?.InherentProudSkillOpens
-            ?.filter { it.ProudSkillGroupId != null && it.NeedAvatarPromoteLevel <= avatar.promoteLevel }
-            ?.map { proudSkillData[it.ProudSkillGroupId]!![0] }
-        proudSkillList?.flatMap { it.props }?.forEach { props.add(it.PropType, it.Value) }
+        val proudSkillList = skillDepot?.inherentProudSkillOpens
+            ?.filter { it.proudSkillGroupId != null && it.needAvatarPromoteLevel <= avatar.promoteLevel }
+            ?.map { proudSkillData[it.proudSkillGroupId]!![0] }
+        proudSkillList?.flatMap { it.props }?.forEach { props.add(it.propType, it.value) }
         avatar.extraAbilityEmbryos.addAll(affixes.map { it.openConfig }.filter { it.isNotEmpty() })
 
         avatar.extraAbilityEmbryos.addAll(avatar.constellations
@@ -236,9 +261,11 @@ object AvatarService {
 
         avatar.fightProperties.clear()
         avatar.fightProperties.putAll(props.map { it.key.id to it.value })
+        session.send(avatarFightPropNotify {
+            avatarGuid = avatar.guid
+            fightPropMap.putAll(avatar.fightProperties)
+        })
 
-
-        session.send(PacketAvatarFightPropNotify(avatar.guid, avatar.fightProperties))
 //        // Update client abilities
 //        val entity: EntityAvatar? = player!!.teamManager.activeTeam.firstOrNull { it.avatar === this }
 //        if (entity != null && (extraAbilityEmbryos != prevExtraAbilityEmbryos || forceSendAbilityChange)) {

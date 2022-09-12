@@ -4,7 +4,6 @@ import bluntblade.Account
 import bluntblade.Avatar
 import bluntblade.BasePacket
 import bluntblade.game.PlayerProperty
-import bluntblade.game.Stat
 
 fun prop(property: PlayerProperty, value: Long) = property.id to propValue {
     type = property.id
@@ -53,22 +52,3 @@ class PacketAvatarDataNotify(account: Account)
         avatarGuidList.addAll(guids)
     } }.toMap())
 }, buildHeader(2))
-
-class PacketAvatarFightPropNotify(
-    guid: Long, props: Map<Int, Float>
-) : BasePacket(avatarFightPropNotify {
-        avatarGuid = guid
-        fightPropMap.putAll(props)
-    })
-
-class PacketAvatarFightPropUpdateNotify(avatar: Avatar, stat: Stat)
-    : BasePacket(avatarFightPropUpdateNotify {
-    avatarGuid = avatar.guid
-    fightPropMap.put(stat.id, avatar.prop(stat))
-})
-
-class PacketAvatarLifeStateChangeNotify(avatar: Avatar, lifeState: Int)
-    : BasePacket(avatarLifeStateChangeNotify {
-    avatarGuid = avatar.guid
-    this.lifeState = lifeState
-})

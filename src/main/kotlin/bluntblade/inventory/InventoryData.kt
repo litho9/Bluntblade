@@ -62,7 +62,7 @@ val reliquaryMainPropData: List<ReliquaryMainPropData> =
     resource("ExcelBinOutput/ReliquaryMainPropExcelConfigData.json")
 
 @Serializable
-data class AddProps(val PropType: FightProperty = FightProperty.FIGHT_PROP_NONE, val Value: Float = 0f)
+data class AddProps(val propType: FightProperty = FightProperty.FIGHT_PROP_NONE, val value: Float = 0f)
 @Serializable
 data class ReliquaryLevelData(val rank: Int = 0, val level: Int, val exp: Int = 0, val addProps: List<AddProps>)
 
@@ -101,7 +101,7 @@ val weaponData: Map<Int, WeaponData> by lazy {
 }
 
 @Serializable
-data class CostItem(val id: Int = 0, val count: Int = 0)
+data class CostItem(val id: Int = 0, val count: Int = 1)
 @Serializable
 data class WeaponPromoteData(
     @SerialName("weaponPromoteId") val id: Int,
@@ -152,39 +152,39 @@ val relicData by lazy {
         .associateBy(RelicData::id)
 }
 
-data class RelicSetData(
-    @SerialName("Id") val id: Int,
-    @SerialName("EquipAffixId") val equipAffixId: Int,
-    @SerialName("SetNeedNum") val setNeedNums: List<Int>
-)
+@Serializable
+data class RelicSetData(val id: Int, val equipAffixId: Int, @SerialName("setNeedNum") val setNeedNums: List<Int>)
 val reliquarySetData by lazy {
     resource<List<RelicSetData>>("ExcelBinOutput/ReliquarySetExcelConfigData.json")
         .associateBy { it.id }
 }
 
+@Serializable
 data class EquipAffixData(
-    @SerialName("Id") val id: Int,
-    @SerialName("EquipAffixId") val equipAffixId: Int,
-    @SerialName("AddProps") val props: List<AddProps>,
-    @SerialName("OpenConfig") val openConfig: String
+    val id: Int,
+    val equipAffixId: Int,
+    @SerialName("addProps") val props: List<AddProps>,
+    val openConfig: String
 )
 val equipAffixData by lazy {
     resource<List<EquipAffixData>>("ExcelBinOutput/EquipAffixExcelConfigData.json")
         .groupBy { it.id }
 }
 
+@Serializable
 data class ItemUse(
-    @SerialName("UseOp") val op: String = "",
-    @SerialName("UseParam") val params: List<String>,
+    @SerialName("useOp") val op: String = "",
+    @SerialName("useParam") val params: List<String>,
 )
+@Serializable
 data class MaterialData(
-    @SerialName("Id") val id: Int,
-    @SerialName("MaterialType") val type: MaterialType,
-    @SerialName("UseTarget") val useTarget: String,
-    @SerialName("SatiationParams") val satiationParams: List<Int>,
-    @SerialName("ItemUse") val itemUse: List<ItemUse>,
-    @SerialName("DestroyReturnMaterial") val destroyReturnMaterial: List<Int>,
-    @SerialName("DestroyReturnMaterialCount") val destroyReturnMaterialCount: List<Int>,
+    val id: Int,
+    @SerialName("materialType") val type: MaterialType,
+    val useTarget: String,
+    val satiationParams: List<Int>,
+    val itemUse: List<ItemUse>,
+    val destroyReturnMaterial: List<Int>,
+    val destroyReturnMaterialCount: List<Int>,
 )
 val materialData by lazy {
     resource<List<MaterialData>>("ExcelBinOutput/MaterialExcelConfigData.json")
@@ -196,13 +196,14 @@ fun destroyMaterialsFor(itemId: Int): List<CostItem> {
         .map { CostItem(it.first, it.second) }
 }
 
+@Serializable
 data class CombineData(
-    @SerialName("CombineId") val id: Int,
-    @SerialName("PlayerLevel") val playerLevel: Int,
-    @SerialName("MaterialItems") val materials: List<CostItem>,
-    @SerialName("ScoinCost") val moraCost: Int,
-    @SerialName("ResultItemId") val resultItemId: Int,
-    @SerialName("ResultItemCount") val resultItemCount: Int,
+    @SerialName("combineId") val id: Int,
+    val playerLevel: Int,
+    @SerialName("materialItems") val materials: List<CostItem>,
+    @SerialName("scoinCost") val moraCost: Int,
+    val resultItemId: Int,
+    val resultItemCount: Int,
 )
 val combineData by lazy {
     resource<List<CombineData>>("ExcelBinOutput/CombineExcelConfigData.json")

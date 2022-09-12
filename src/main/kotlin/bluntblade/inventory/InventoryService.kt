@@ -23,7 +23,7 @@ object InventoryService {
         }, BasePacket.buildHeader())
     }
 
-    fun promoteWeapon(session: GameSession, req: WeaponPromoteReq) {
+    fun weaponPromote(session: GameSession, req: WeaponPromoteReq) {
         val weapon = session.account.inventory.weapons[req.targetWeaponGuid]!!
         if (weapon.level != unlockMaxLevel[weapon.promoteLevel])
             throw IllegalArgumentException("Invalid weapon level")

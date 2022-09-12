@@ -9,17 +9,17 @@ import java.util.regex.Pattern
 data class PropGrowCurvesData(val Type: String, val GrowCurve: String)
 @Serializable
 data class AvatarData(
-    @SerialName("Id") val id: Int,
+    val id: Int,
     @SerialName("AvatarPromoteId") val promoteId: Int,
-    @SerialName("SkillDepotId") val skillDepotId: Int,
-    @SerialName("IconName") val iconName: String,
-    val HpBase: Float,
-    val AttackBase: Float,
-    val DefenseBase: Float,
-    val Critical: Float,
-    val CriticalHurt: Float,
-    val InitialWeapon: Int,
-    @SerialName("PropGrowCurves") val curves: List<PropGrowCurvesData>
+    val skillDepotId: Int,
+    val iconName: String,
+    val hpBase: Float,
+    val attackBase: Float,
+    val defenseBase: Float,
+    val critical: Float,
+    val criticalHurt: Float,
+    val initialWeapon: Int,
+    @SerialName("propGrowCurves") val curves: List<PropGrowCurvesData>
 )
 val avatarData by lazy {
     resource<List<AvatarData>>("ExcelBinOutput/AvatarExcelConfigData.json")
@@ -41,16 +41,15 @@ val avatarPromoteData by lazy {
 
 @Serializable
 data class InherentProudSkillOpens(
-    val ProudSkillGroupId: Int? = null,
-    val NeedAvatarPromoteLevel: Int = 0
+    val proudSkillGroupId: Int? = null,
+    val needAvatarPromoteLevel: Int = 0
 )
 data class AvatarSkillDepot(
-    @SerialName("Id") val id: Int,
+    val id: Int,
     @SerialName("EnergySkill") val burstId: Int,
     @SerialName("Skills") val skillIds: List<Int>,
-    @SerialName("EnergySkill") val energySkill: Int,
-    val InherentProudSkillOpens: List<InherentProudSkillOpens>,
-    @SerialName("SkillDepotAbilityGroup") val abilityGroup: String, // only for MC
+    val inherentProudSkillOpens: List<InherentProudSkillOpens>,
+    @SerialName("skillDepotAbilityGroup") val abilityGroup: String, // only for MC
 )
 val avatarSkillDepotData by lazy {
     resource<List<AvatarSkillDepot>>("ExcelBinOutput/AvatarSkillDepotExcelConfigData.json")
@@ -58,9 +57,9 @@ val avatarSkillDepotData by lazy {
         .associateBy(AvatarSkillDepot::id)
 }
 fun proudSkillIdFor(skillDepotId: Int, level: Int): Int? =
-    avatarSkillDepotData[skillDepotId]!!.InherentProudSkillOpens.firstOrNull {
-        it.NeedAvatarPromoteLevel == level && it.ProudSkillGroupId != null
-    }?.ProudSkillGroupId
+    avatarSkillDepotData[skillDepotId]!!.inherentProudSkillOpens.firstOrNull {
+        it.needAvatarPromoteLevel == level && it.proudSkillGroupId != null
+    }?.proudSkillGroupId
 
 @Serializable
 data class AvatarLevelData(val Level: Int, val Exp: Int)

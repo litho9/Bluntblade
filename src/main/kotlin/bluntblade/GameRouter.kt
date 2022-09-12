@@ -20,7 +20,7 @@ object GameRouter {
 
         // inventory
         PacketOpcodes.SetEquipLockStateReq -> InventoryService.lock(session, SetEquipLockStateReq.parseFrom(payload))
-        PacketOpcodes.WeaponPromoteReq -> InventoryService.promoteWeapon(session, WeaponPromoteReq.parseFrom(payload))
+        PacketOpcodes.WeaponPromoteReq -> InventoryService.weaponPromote(session, WeaponPromoteReq.parseFrom(payload))
         PacketOpcodes.CalcWeaponUpgradeReturnItemsReq -> InventoryService.calcWeaponUpgradeLeftovers(session, CalcWeaponUpgradeReturnItemsReq.parseFrom(payload))
         PacketOpcodes.WeaponUpgradeReq -> InventoryService.upgradeWeapon(session, WeaponUpgradeReq.parseFrom(payload))
         PacketOpcodes.WeaponAwakenReq -> InventoryService.refineWeapon(session, WeaponAwakenReq.parseFrom(payload))

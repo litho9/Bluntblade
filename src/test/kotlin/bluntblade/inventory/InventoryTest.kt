@@ -93,7 +93,7 @@ internal class InventoryManagerTest {
         account.inventory.materials[1001] = Material(account.newGuid(), 1001, 100)
         account.inventory.materials[1002] = Material(account.newGuid(), 1002, 100)
         val req4 = weaponPromoteReq { targetWeaponGuid = weapon.guid }
-        val packets3 = InventoryService.promoteWeapon(session, req4)
+        val packets3 = InventoryService.weaponPromote(session, req4)
         assertEquals(100, account.inventory.materials[1000]?.count)
         assertEquals(100, account.inventory.materials[1001]?.count)
         assertEquals(100, account.inventory.materials[1002]?.count)
