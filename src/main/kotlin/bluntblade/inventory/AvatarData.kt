@@ -28,11 +28,11 @@ val avatarData by lazy {
 
 @Serializable
 data class AvatarPromoteData(
-    @SerialName("AvatarPromoteId") val id: Int,
-    @SerialName("CostItems") val costs: List<CostItem>,
-    @SerialName("ScoinCost") val costCoin: Int,
-    @SerialName("UnlockMaxLevel") val unlockMaxLevel: Int,
-    @SerialName("AddProps") val addProps: List<AddProps>
+    @SerialName("avatarPromoteId") val id: Int,
+    @SerialName("costItems") val costs: List<CostItem>,
+    @SerialName("scoinCost") val costCoin: Int,
+    val unlockMaxLevel: Int,
+    val addProps: List<AddProps>
 )
 val avatarPromoteData by lazy {
     resource<List<AvatarPromoteData>>("ExcelBinOutput/AvatarPromoteExcelConfigData.json")
@@ -46,8 +46,8 @@ data class InherentProudSkillOpens(
 )
 data class AvatarSkillDepot(
     val id: Int,
-    @SerialName("EnergySkill") val burstId: Int,
-    @SerialName("Skills") val skillIds: List<Int>,
+    @SerialName("energySkill") val burstId: Int,
+    @SerialName("skills") val skillIds: List<Int>,
     val inherentProudSkillOpens: List<InherentProudSkillOpens>,
     @SerialName("skillDepotAbilityGroup") val abilityGroup: String, // only for MC
 )
@@ -74,10 +74,10 @@ val avatarTotalExpData: List<Int> by lazy {
 
 @Serializable
 data class AvatarSkillData(
-    @SerialName("Id") val id: Int,
-    @SerialName("CostElemType") val element: String, // Ex.: "Ice"
-    @SerialName("CostElemVal") val elementValue: Float,
-    @SerialName("ProudSkillGroupId") val proudSkillGroupId: Int
+    val id: Int,
+    @SerialName("costElemType") val element: String, // Ex.: "Ice"
+    @SerialName("costElemVal") val elementValue: Float,
+    val proudSkillGroupId: Int
 )
 val avatarSkillData by lazy {
     resource<List<AvatarSkillData>>("ExcelBinOutput/AvatarSkillExcelConfigData.json")
@@ -85,11 +85,11 @@ val avatarSkillData by lazy {
 }
 @Serializable
 data class ProudSkillData(
-    @SerialName("ProudSkillId") val id: Int,
-    @SerialName("ProudSkillGroupId") val proudSkillGroupId: Int,
-    @SerialName("CostItems") val costs: List<CostItem>,
-    @SerialName("CoinCost") val costCoin: Int,
-    @SerialName("AddProps") val props: List<AddProps>,
+    @SerialName("proudSkillId") val id: Int,
+    val proudSkillGroupId: Int,
+    @SerialName("costItems") val costs: List<CostItem>,
+    @SerialName("coinCost") val costCoin: Int,
+    @SerialName("addProps") val props: List<AddProps>,
 )
 val proudSkillData by lazy {
     resource<List<ProudSkillData>>("ExcelBinOutput/ProudSkillExcelConfigData.json")
@@ -98,9 +98,9 @@ val proudSkillData by lazy {
 
 @Serializable
 data class AvatarTalentData(
-    @SerialName("TalentId") val id: Int,
-    @SerialName("MainCostItemId") val mainCostItemId: Int,
-    @SerialName("OpenConfig") val openConfig: String,
+    @SerialName("talentId") val id: Int,
+    val mainCostItemId: Int,
+    val openConfig: String,
 )
 val avatarTalentData by lazy {
     resource<List<AvatarTalentData>>("ExcelBinOutput/AvatarTalentExcelConfigData.json")
@@ -164,18 +164,18 @@ val totalFetterExpData = with(0) {
 val maxFetterExp = totalFetterExpData[totalFetterExpData.size - 1]
 
 @Serializable
-data class FetterData(val FetterId: Int, val AvatarId: Int)
+data class FetterData(val fetterId: Int, val avatarId: Int)
 val fetterIdMap by lazy {
     resource<List<FetterData>>("ExcelBinOutput/FettersExcelConfigData.json")
-        .groupBy(FetterData::AvatarId)
-        .mapValues { it.value.map(FetterData::FetterId) }
+        .groupBy(FetterData::avatarId)
+        .mapValues { it.value.map(FetterData::fetterId) }
 }
 
 @Serializable
-data class CurveInfosData(val Type: String, val Value: Float)
+data class CurveInfosData(val type: String, val value: Float)
 @Serializable
-data class AvatarCurveData(val Level: Int, val CurveInfos: List<CurveInfosData>)
+data class AvatarCurveData(val level: Int, val curveInfos: List<CurveInfosData>)
 val avatarCurveData: Map<String, List<Float>> by lazy {
     val data = resource<List<AvatarCurveData>>("ExcelBinOutput/AvatarCurveExcelConfigData.json")
-    (0 until 4).associate { i -> data[0].CurveInfos[i].Type to data.map { it.CurveInfos[i].Value } }
+    (0 until 4).associate { i -> data[0].curveInfos[i].type to data.map { it.curveInfos[i].value } }
 }

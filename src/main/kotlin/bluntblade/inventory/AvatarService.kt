@@ -5,6 +5,7 @@ import bluntblade.*
 import bluntblade.game.ElementType
 import bluntblade.game.FightProperty
 import bluntblade.game.FightProperty.*
+import bluntblade.game.PlayerProperty
 import bluntblade.game.Stat
 import bluntblade.game.Stat.*
 import bluntblade.inventory.AvatarMessages.*
@@ -271,6 +272,41 @@ object AvatarService {
 //        if (entity != null && (extraAbilityEmbryos != prevExtraAbilityEmbryos || forceSendAbilityChange)) {
 //            player!!.sendPacket(PacketAbilityChangeNotify(entity))
 //        }
+    }
+
+    fun toProto(avatar: Avatar) = avatarInfo {
+        avatarId = avatar.id
+        guid = avatar.guid
+        lifeState = 1
+        talentIdList.addAll(avatar.constellations)
+        fightPropMap.putAll(avatar.fightProperties)
+        skillDepotId = avatar.skillDepotId
+        coreProudSkillLevel = avatar.constellations.size
+        skillLevelMap.putAll(avatar.skillLevels)
+        inherentProudSkillList.addAll(avatar.proudSkillIds)
+        proudSkillExtraLevelMap.putAll(avatar.proudSkillBonusMap)
+        avatarType = 1
+        bornTime = avatar.createdAt.toInt()
+        fetterInfo = toFetterProto(avatar)
+        wearingFlycloakId = avatar.flyCloakId
+        costumeId = avatar.costumeId
+        skillMap.putAll(avatar.skillExtraCharges.mapValues { (_, value) ->
+            avatarSkillInfo { maxChargeCount = value } })
+        equipGuidList.add(avatar.weaponGuid)
+        equipGuidList.addAll(avatar.relicGuids)
+        propMap.putAll(setOf(
+            prop(PlayerProperty.PROP_LEVEL, avatar.level.toLong()),
+            prop(PlayerProperty.PROP_EXP, avatar.exp.toLong()),
+            prop(PlayerProperty.PROP_BREAK_LEVEL, avatar.promoteLevel.toLong()),
+            prop(PlayerProperty.PROP_SATIATION_VAL, 0L),
+            prop(PlayerProperty.PROP_SATIATION_PENALTY_TIME, 0L),
+        ).toMap())
+    }
+
+    private fun prop(property: PlayerProperty, value: Long) = property.id to propValue {
+        type = property.id
+        ival = value
+        this.value = value
     }
 
     private const val MC_MALE_ID = 10000005

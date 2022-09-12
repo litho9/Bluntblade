@@ -6,7 +6,6 @@ import bluntblade.GameSession
 import bluntblade.account.AccountMessages.*
 import bluntblade.db
 import bluntblade.game.PacketOpcodes
-import bluntblade.inventory.*
 import bluntblade.queue.ForgeQueueService
 import org.litote.kmongo.eq
 import org.litote.kmongo.findOne
@@ -68,15 +67,25 @@ object AccountService {
         session.send(PacketPlayerDataNotify(session.account),
             PacketStoreWeightLimitNotify(),
             PacketPlayerStoreNotify(session.account.inventory),
-            PacketAvatarDataNotify(session.account),
 //        session.send(PacketFinishedParentQuestNotify(this)) TODO
 //        session.send(PacketBattlePassAllDataNotify(this))
 //        session.send(PacketQuestListNotify(this))
 //        session.send(PacketCodexDataFullNotify(this))
 //        session.send(PacketAllWidgetDataNotify(this))
 //        session.send(PacketWidgetGadgetAllDataNotify())
-            PacketCombineDataNotify(session.account.unlockedCombines)
         )
+        session.send(avatarDataNotify {
+            curAvatarTeamId = session.account.curTeamIdx
+            chooseAvatarGuid = session.account.curTeam()[0] // TODO
+            ownedFlycloakList.addAll(session.account.flyCloaks)
+            ownedCostumeList.addAll(session.account.costumes)
+            avatarList.addAll(session.account.avatars.values.map { AvatarService.toProto(it) })
+            avatarTeamMap.putAll(session.account.teams.mapIndexed { idx, guids -> idx to avatarTeam {
+                teamName = session.account.teamNames[idx]
+                avatarGuidList.addAll(guids)
+            } }.toMap())
+        }, BasePacket.buildHeader(2))
+        session.send(PacketCombineDataNotify(session.account.unlockedCombines))
         ForgeQueueService.notify(session)
 //        resinManager.onPlayerLogin()
 //        todayMoonCard() // The timer works at 0:0, some users log in after that, use this method to check if they have received a reward today or not. If not, send the reward.

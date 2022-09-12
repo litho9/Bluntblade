@@ -124,7 +124,7 @@ object SceneService {
                 val team = p.curTeam
                 val resonances = team.groupBy {
                     val skillDepot = avatarSkillDepotData[it.avatar.skillDepotId]!!
-                    val burstData = avatarSkillData[skillDepot.energySkill]!!
+                    val burstData = avatarSkillData[skillDepot.burstId]!!
                     ElementType.valueOf(burstData.element)
                 }.entries.filter { it.value.size > 1 }
                 val resonanceEmbryos = resonances.map { it.key.configName!! }
@@ -150,7 +150,7 @@ object SceneService {
                             abilityNameHash = abilityHash(e)
                         } })
                     }
-                    avatarInfo = toProto(entity.avatar)
+                    avatarInfo = AvatarService.toProto(entity.avatar)
                     sceneAvatarInfo = sceneAvatarInfo {
                         uid = p.account.uid
                         avatarId = entity.avatar.id
