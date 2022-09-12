@@ -64,16 +64,38 @@ object AccountService {
 //        doDailyReset()
 
         // Packets
-        session.send(PacketPlayerDataNotify(session.account),
-            PacketStoreWeightLimitNotify(),
-            PacketPlayerStoreNotify(session.account.inventory),
+        session.send(PacketPlayerDataNotify(session.account))
+        session.send(storeWeightLimitNotify {
+            storeType = InventoryMessages.StoreType.PACK
+            weightLimit = InventoryService.LIMIT_ALL
+            weaponCountLimit = InventoryService.LIMIT_WEAPONS
+            reliquaryCountLimit = InventoryService.LIMIT_RELICS
+            materialCountLimit = InventoryService.LIMIT_MATERIALS
+            furnitureCountLimit = InventoryService.LIMIT_FURNITURE
+        })
+//        session.send(PacketPlayerStoreNotify(session.account.inventory))
+        session.send(playerStoreNotify {
+            storeType = InventoryMessages.StoreType.PACK
+            weightLimit = InventoryService.LIMIT_ALL
+            itemList.addAll(session.account.inventory.weapons.map { InventoryService.toProto(it.value) })
+            itemList.addAll(session.account.inventory.relics.map { InventoryService.toProto(it.value) })
+            itemList.addAll(session.account.inventory.materials.map { (id, material) -> item {
+                guid = material.guid
+                itemId = id
+                this.material = material { count = material.count }
+            } })
+            itemList.addAll(session.account.inventory.furniture.map { (id, material) -> item {
+                guid = material.guid
+                itemId = id
+                this.furniture = furniture { count = material.count }
+            } })
+        })
 //        session.send(PacketFinishedParentQuestNotify(this)) TODO
 //        session.send(PacketBattlePassAllDataNotify(this))
 //        session.send(PacketQuestListNotify(this))
 //        session.send(PacketCodexDataFullNotify(this))
 //        session.send(PacketAllWidgetDataNotify(this))
 //        session.send(PacketWidgetGadgetAllDataNotify())
-        )
         session.send(avatarDataNotify {
             curAvatarTeamId = session.account.curTeamIdx
             chooseAvatarGuid = session.account.curTeam()[0] // TODO
@@ -85,7 +107,7 @@ object AccountService {
                 avatarGuidList.addAll(guids)
             } }.toMap())
         }, BasePacket.buildHeader(2))
-        session.send(PacketCombineDataNotify(session.account.unlockedCombines))
+        session.send(combineDataNotify { combineIdList.addAll(session.account.unlockedCombines) })
         ForgeQueueService.notify(session)
 //        resinManager.onPlayerLogin()
 //        todayMoonCard() // The timer works at 0:0, some users log in after that, use this method to check if they have received a reward today or not. If not, send the reward.

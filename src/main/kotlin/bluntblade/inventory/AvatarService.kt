@@ -19,11 +19,16 @@ object AvatarService {
         InventoryService.pay(session, promoteData.costs, promoteData.costCoin)
         proudSkillIdFor(avatar.skillDepotId, avatar.promoteLevel)?.let {
             avatar.proudSkillIds.add(it)
-            session.send(PacketProudSkillChangeNotify(avatar))
+            session.send(proudSkillChangeNotify {
+                avatarGuid = avatar.guid
+//    entityId = avatar.entityId // TODO
+                skillDepotId = avatar.skillDepotId
+                proudSkillList.addAll(avatar.proudSkillIds)
+            })
         }
 
-        session.send(PacketAvatarPropNotify(avatar),
-            PacketAvatarPromoteRsp(avatar))
+        session.send(propNotify(avatar))
+        session.send(avatarPromoteRsp { guid = avatar.guid })
         // TODO Send entity prop update packet to world
         recalcStats(session, avatar)// , forceSendAbilityChange=true
 //        avatar.save()
@@ -51,14 +56,20 @@ object AvatarService {
         recalcStats(session, avatar)
 //        avatar.save()
         // TODO Send entity prop update packet to world
-        session.send(PacketAvatarPropNotify(avatar),
-            PacketAvatarUpgradeRsp(avatar, oldLevel, oldPropMap))
+        session.send(propNotify(avatar))
+        session.send(avatarUpgradeRsp {
+            avatarGuid = avatar.guid
+            this.oldLevel = oldLevel
+            curLevel = avatar.level
+            oldFightPropMap.putAll(oldPropMap)
+            curFightPropMap.putAll(avatar.fightProperties)
+        })
     }
 
     fun upgradeFetterLevel(session: GameSession, avatar: Avatar, expGain: Int) {
         avatar.fetterTotalExp = (avatar.fetterTotalExp + expGain).coerceAtMost(maxFetterExp)
 //        avatar.save()
-        session.send(PacketAvatarPropNotify(avatar))
+        session.send(propNotify(avatar))
         session.send(avatarFetterDataNotify {
             fetterInfoMap[avatar.guid] = toFetterProto(avatar) })
     }
@@ -301,6 +312,23 @@ object AvatarService {
             prop(PlayerProperty.PROP_SATIATION_VAL, 0L),
             prop(PlayerProperty.PROP_SATIATION_PENALTY_TIME, 0L),
         ).toMap())
+    }
+
+    private fun toFetterProto(avatar: Avatar) = avatarFetterInfo {
+        expLevel = totalFetterExpData.indexOfFirst { it > avatar.fetterTotalExp }
+        expNumber = avatar.fetterTotalExp - totalFetterExpData[expLevel - 1]
+        fetterList.addAll(fetterIdMap[avatar.id]!!.subList(0, expLevel)
+            .map { fetterData { fetterId = it; fetterState = 3 /* FINISH*/ } })
+        if (expLevel == 10) rewardedFetterLevelList.add(10)
+    }
+
+    fun propNotify(avatar: Avatar) = avatarPropNotify {
+        avatarGuid = avatar.guid
+        propMap[PlayerProperty.PROP_LEVEL.id] = avatar.level.toLong()
+        propMap[PlayerProperty.PROP_EXP.id] = avatar.exp.toLong()
+        propMap[PlayerProperty.PROP_BREAK_LEVEL.id] = avatar.promoteLevel.toLong()
+        propMap[PlayerProperty.PROP_SATIATION_VAL.id] = 0
+        propMap[PlayerProperty.PROP_SATIATION_PENALTY_TIME.id] = 0
     }
 
     private fun prop(property: PlayerProperty, value: Long) = property.id to propValue {
