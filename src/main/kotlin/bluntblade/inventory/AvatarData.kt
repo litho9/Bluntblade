@@ -22,7 +22,7 @@ data class AvatarData(
     @SerialName("propGrowCurves") val curves: List<PropGrowCurvesData>
 )
 val avatarData by lazy {
-    resource<List<AvatarData>>("ExcelBinOutput/AvatarExcelConfigData.json")
+    resource<List<AvatarData>>("data/Avatar.json")
         .associateBy(AvatarData::id)
 }
 
@@ -35,7 +35,7 @@ data class AvatarPromoteData(
     val addProps: List<AddProps>
 )
 val avatarPromoteData by lazy {
-    resource<List<AvatarPromoteData>>("ExcelBinOutput/AvatarPromoteExcelConfigData.json")
+    resource<List<AvatarPromoteData>>("data/AvatarPromote.json")
         .groupBy(AvatarPromoteData::id)
 }
 
@@ -52,7 +52,7 @@ data class AvatarSkillDepot(
     @SerialName("skillDepotAbilityGroup") val abilityGroup: String, // only for MC
 )
 val avatarSkillDepotData by lazy {
-    resource<List<AvatarSkillDepot>>("ExcelBinOutput/AvatarSkillDepotExcelConfigData.json")
+    resource<List<AvatarSkillDepot>>("data/AvatarSkillDepot.json")
 //        .onEach { it.InherentProudSkillOpens.removeIf { r -> r.ProudSkillGroupId == null } }
         .associateBy(AvatarSkillDepot::id)
 }
@@ -64,7 +64,7 @@ fun proudSkillIdFor(skillDepotId: Int, level: Int): Int? =
 @Serializable
 data class AvatarLevelData(val Level: Int, val Exp: Int)
 val avatarLevelData by lazy {
-    resource<List<AvatarLevelData>>("ExcelBinOutput/AvatarLevelExcelConfigData.json")
+    resource<List<AvatarLevelData>>("data/AvatarLevel.json")
         .map(AvatarLevelData::Exp)
 }
 val avatarTotalExpData: List<Int> by lazy {
@@ -80,7 +80,7 @@ data class AvatarSkillData(
     val proudSkillGroupId: Int
 )
 val avatarSkillData by lazy {
-    resource<List<AvatarSkillData>>("ExcelBinOutput/AvatarSkillExcelConfigData.json")
+    resource<List<AvatarSkillData>>("data/AvatarSkill.json")
         .associateBy(AvatarSkillData::id)
 }
 @Serializable
@@ -92,7 +92,7 @@ data class ProudSkillData(
     @SerialName("addProps") val props: List<AddProps>,
 )
 val proudSkillData by lazy {
-    resource<List<ProudSkillData>>("ExcelBinOutput/ProudSkillExcelConfigData.json")
+    resource<List<ProudSkillData>>("data/ProudSkill.json")
         .groupBy(ProudSkillData::proudSkillGroupId)
 }
 
@@ -103,7 +103,7 @@ data class AvatarTalentData(
     val openConfig: String,
 )
 val avatarTalentData by lazy {
-    resource<List<AvatarTalentData>>("ExcelBinOutput/AvatarTalentExcelConfigData.json")
+    resource<List<AvatarTalentData>>("data/AvatarTalent.json")
         .associateBy(AvatarTalentData::id)
 }
 
@@ -166,7 +166,7 @@ val maxFetterExp = totalFetterExpData[totalFetterExpData.size - 1]
 @Serializable
 data class FetterData(val fetterId: Int, val avatarId: Int)
 val fetterIdMap by lazy {
-    resource<List<FetterData>>("ExcelBinOutput/FettersExcelConfigData.json")
+    resource<List<FetterData>>("data/Fetters.json")
         .groupBy(FetterData::avatarId)
         .mapValues { it.value.map(FetterData::fetterId) }
 }
@@ -176,6 +176,6 @@ data class CurveInfosData(val type: String, val value: Float)
 @Serializable
 data class AvatarCurveData(val level: Int, val curveInfos: List<CurveInfosData>)
 val avatarCurveData: Map<String, List<Float>> by lazy {
-    val data = resource<List<AvatarCurveData>>("ExcelBinOutput/AvatarCurveExcelConfigData.json")
+    val data = resource<List<AvatarCurveData>>("data/AvatarCurve.json")
     (0 until 4).associate { i -> data[0].curveInfos[i].type to data.map { it.curveInfos[i].value } }
 }

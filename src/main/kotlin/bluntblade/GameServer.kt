@@ -104,13 +104,15 @@ abstract class GameSession {
     //                        rot = it.rot.toProto()
     //                    }
 
-    abstract fun send(vararg packets: BasePacket)
     abstract fun send(
         data: GeneratedMessageV3?,
         header: ByteArray = ByteArray(0),
         encryption: ByteArray? = null, // null | Crypto.DISPATCH_KEY | Crypto.ENCRYPT_KEY
         opcode: PacketOpcodes = PacketOpcodes.valueOf(data!!.javaClass.simpleName)
     )
+    fun broadcast(data: GeneratedMessageV3) {
+        // TODO
+    }
     open fun getHostAddress(): String = "0.0.0.0"
 }
 
@@ -155,11 +157,6 @@ class GameSessionKcp(val ukcp: Ukcp): GameSession() {
         } finally {
             packet.release()
         }
-    }
-
-    override fun send(vararg packets: BasePacket) {
-        for (packet in packets)
-            send(packet.data, packet.header, packet.encryption, packet.opcode)
     }
 
     override fun send(
@@ -241,18 +238,9 @@ class GameSessionKcp(val ukcp: Ukcp): GameSession() {
     }
 }
 
-open class BasePacket(
-    val data: GeneratedMessageV3?,
-    var header: ByteArray = ByteArray(0),
-    var encryption: ByteArray? = null, // null | Crypto.DISPATCH_KEY | Crypto.ENCRYPT_KEY
-    val opcode: PacketOpcodes = PacketOpcodes.valueOf(data!!.javaClass.simpleName),
-) {
-    companion object {
-        fun buildHeader(clientSequence: Int = 0): ByteArray = packetHead {
-            clientSequenceId = clientSequence
-            timestamp = System.currentTimeMillis()
-        }.toByteArray()
-    }
-}
+fun buildHeader(clientSequence: Int = 0): ByteArray = packetHead {
+    clientSequenceId = clientSequence
+    timestamp = System.currentTimeMillis()
+}.toByteArray()
 
 fun today(): LocalDate = LocalDate.now(ZoneId.of("America/Phoenix")) // arbitrary GMT-7 timezone

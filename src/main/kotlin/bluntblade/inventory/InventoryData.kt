@@ -23,7 +23,7 @@ val unlockMaxLevel = arrayOf(20, 40, 50, 60, 70, 80)
 data class WeaponLevelData(val level: Int, val requiredExps: List<Int>)
 
 val weaponTotalExpData: List<List<Int>> by lazy {
-    val data = resource<List<WeaponLevelData>>("ExcelBinOutput/WeaponLevelExcelConfigData.json")
+    val data = resource<List<WeaponLevelData>>("data/WeaponLevel.json")
     val newData = (0..4).map { i -> data.map { it.requiredExps[i] } }
 
     newData.map { rankData ->
@@ -47,7 +47,7 @@ data class ReliquaryAffixData(
 )
 
 val reliquaryAffixData: List<ReliquaryAffixData> =
-    resource("ExcelBinOutput/ReliquaryAffixExcelConfigData.json")
+    resource("data/ReliquaryAffix.json")
 
 @Serializable
 data class ReliquaryMainPropData /*: GameResource()*/ (
@@ -59,7 +59,7 @@ data class ReliquaryMainPropData /*: GameResource()*/ (
 )
 
 val reliquaryMainPropData: List<ReliquaryMainPropData> =
-    resource("ExcelBinOutput/ReliquaryMainPropExcelConfigData.json")
+    resource("data/ReliquaryMainProp.json")
 
 @Serializable
 data class AddProps(val propType: FightProperty = FightProperty.FIGHT_PROP_NONE, val value: Float = 0f)
@@ -67,9 +67,8 @@ data class AddProps(val propType: FightProperty = FightProperty.FIGHT_PROP_NONE,
 data class ReliquaryLevelData(val rank: Int = 0, val level: Int, val exp: Int = 0, val addProps: List<AddProps>)
 
 val relicLevelData: Map<Int, List<ReliquaryLevelData>> by lazy {
-    resource<List<ReliquaryLevelData>>("ExcelBinOutput/ReliquaryLevelExcelConfigData.json")
-        .groupBy { it.rank }
-}
+    resource<List<ReliquaryLevelData>>("data/ReliquaryLevel.json")
+        .groupBy { it.rank } }
 val relicTotalExpData: List<List<Int>> by lazy {
     relicLevelData.values.map { rankData ->
         var totalExp = 0
@@ -96,7 +95,7 @@ data class WeaponData(
 )
 
 val weaponData: Map<Int, WeaponData> by lazy {
-    resource<List<WeaponData>>("ExcelBinOutput/WeaponExcelConfigData.json")
+    resource<List<WeaponData>>("data/Weapon.json")
         .associateBy(WeaponData::id)
 }
 
@@ -112,7 +111,7 @@ data class WeaponPromoteData(
 )
 
 val weaponPromoteData by lazy {
-    resource<List<WeaponPromoteData>>("ExcelBinOutput/WeaponPromoteExcelConfigData.json")
+    resource<List<WeaponPromoteData>>("data/WeaponPromote.json")
         .groupBy(WeaponPromoteData::id)
 }
 
@@ -121,8 +120,7 @@ data class WeaponCurveInfoData(val type: String, val value: Float)
 @Serializable
 data class WeaponCurveData(val curveInfos: List<WeaponCurveInfoData>)
 val weaponCurveData by lazy {
-    resource<List<WeaponCurveData>>("ExcelBinOutput/WeaponCurveExcelConfigData.json")
-}
+    resource<List<WeaponCurveData>>("data/WeaponCurve.json") }
 
 @Serializable
 data class RelicData(
@@ -148,14 +146,14 @@ data class RelicData(
 //        "GadgetId": 70600041
 
 val relicData by lazy {
-    resource<List<RelicData>>("ExcelBinOutput/ReliquaryExcelConfigData.json")
+    resource<List<RelicData>>("data/Reliquary.json")
         .associateBy(RelicData::id)
 }
 
 @Serializable
 data class RelicSetData(val id: Int, val equipAffixId: Int, @SerialName("setNeedNum") val setNeedNums: List<Int>)
 val reliquarySetData by lazy {
-    resource<List<RelicSetData>>("ExcelBinOutput/ReliquarySetExcelConfigData.json")
+    resource<List<RelicSetData>>("data/ReliquarySet.json")
         .associateBy { it.id }
 }
 
@@ -167,7 +165,7 @@ data class EquipAffixData(
     val openConfig: String
 )
 val equipAffixData by lazy {
-    resource<List<EquipAffixData>>("ExcelBinOutput/EquipAffixExcelConfigData.json")
+    resource<List<EquipAffixData>>("data/EquipAffix.json")
         .groupBy { it.id }
 }
 
@@ -187,7 +185,7 @@ data class MaterialData(
     val destroyReturnMaterialCount: List<Int>,
 )
 val materialData by lazy {
-    resource<List<MaterialData>>("ExcelBinOutput/MaterialExcelConfigData.json")
+    resource<List<MaterialData>>("data/Material.json")
         .associateBy { it.id }
 }
 fun destroyMaterialsFor(itemId: Int): List<CostItem> {
@@ -206,6 +204,6 @@ data class CombineData(
     val resultItemCount: Int,
 )
 val combineData by lazy {
-    resource<List<CombineData>>("ExcelBinOutput/CombineExcelConfigData.json")
+    resource<List<CombineData>>("data/Combine.json")
         .associateBy { it.id }
 }

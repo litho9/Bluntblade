@@ -49,7 +49,7 @@ object ForgeQueueService {
 
     fun manipulate(session: GameSession, req: ForgeQueueManipulateReq) {
         val id: Int = req.forgeQueueId
-        val now = Instant.now().epochSecond.toInt()
+        val now = Instant.now().epochSecond
         val forge = session.account.forgeQueues[id - 1]
         val finishCount = forge.timestamps.count { it <= now }
         val data: ForgeData = forgeData[forge.id]!!

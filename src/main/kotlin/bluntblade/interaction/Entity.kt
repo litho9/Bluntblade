@@ -2,6 +2,7 @@ package bluntblade.interaction
 
 import bluntblade.GameEntity
 import bluntblade.game.PlayerProperty
+import bluntblade.game.Stat
 import bluntblade.inventory.vector
 
 class EntityClientGadget(
@@ -51,3 +52,8 @@ class EntityClientGadget(
         }
     }
 }
+
+class EntityMonster(
+    id: Int,
+    val fightProps: MutableMap<Stat, Float> = mutableMapOf(),
+): GameEntity(id)

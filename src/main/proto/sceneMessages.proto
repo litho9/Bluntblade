@@ -1132,11 +1132,38 @@ message EvtDestroyGadgetNotify {
   uint32 entity_id = 8;
 }
 
-// CmdId: 285
-// EnetChannelId: 0
-// EnetIsReliable: true
+// CmdId: 203
 message SceneEntityDisappearNotify {
-  repeated uint32 entity_list = 9;
-  VisionType disappear_type = 10;
   uint32 param = 6;
+  repeated uint32 entity_list = 1;
+  VisionType disappear_type = 2;
+}
+
+// CmdId: 227
+message SceneEntityDrownReq {
+  uint32 entity_id = 10;
+}
+
+// CmdId: 294
+message SceneEntityDrownRsp {
+  int32 retcode = 8;
+  uint32 entity_id = 11;
+}
+
+// CmdId: 1298
+message LifeStateChangeNotify {
+  uint32 entity_id = 4;
+  repeated ServerBuff server_buff_list = 6;
+  string attack_tag = 7;
+  uint32 move_reliable_seq = 15;
+  PlayerDieType die_type = 14;
+  uint32 life_state = 5;
+  uint32 source_entity_id = 1;
+}
+
+// CmdId: 953
+message ChallengeDataNotify {
+  uint32 value = 8;
+  uint32 challenge_index = 2;
+  uint32 param_index = 9;
 }

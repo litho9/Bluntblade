@@ -23,7 +23,7 @@ object InventoryService {
         session.send(setEquipLockStateRsp {
             isLocked = equip.locked
             targetEquipGuid = equip.guid
-        }, BasePacket.buildHeader())
+        }, buildHeader())
     }
 
     fun weaponPromote(session: GameSession, req: WeaponPromoteReq) {

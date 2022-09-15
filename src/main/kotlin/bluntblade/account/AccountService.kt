@@ -1,15 +1,20 @@
 package bluntblade.account
 
 import bluntblade.inventory.*
-import bluntblade.BasePacket
 import bluntblade.GameSession
+import bluntblade.GameSessionKcp
 import bluntblade.account.AccountMessages.*
+import bluntblade.buildHeader
 import bluntblade.db
-import bluntblade.game.PacketOpcodes
 import bluntblade.queue.ForgeQueueService
+import com.google.protobuf.ByteString
 import org.litote.kmongo.eq
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
+
+// HandlerPlayerForceExitReq
+// HandlerPingReq
+// HandlerGetAuthkeyReq
 
 object AccountService {
     fun getToken(session: GameSession, req: GetPlayerTokenReq) {
@@ -22,20 +27,48 @@ object AccountService {
 //        session.player = DatabaseHelper.getOrCreatePlayer(session) // Set player object for session
 //        session.secretKey = Crypto.ENCRYPT_KEY
 //        session.state = SessionState.WAITING_FOR_LOGIN
-        session.send(PacketGetPlayerTokenRsp(session))
+        session.send(getPlayerTokenRsp {
+            uid = session.account.uid
+            token = session.account.token
+            accountType = 1
+            isProficientPlayer = session.account.avatars.isNotEmpty() // Not sure where this goes
+            secretKeySeed = GameSessionKcp.ENCRYPT_SEED
+            securityCmdBuffer = ByteString.copyFrom(GameSessionKcp.ENCRYPT_SEED_BUFFER)
+            platformType = 3
+            channelId = 1
+            countryCode = "US"
+            clientVersionRandomKey = "c25-314dd05b0b5f"
+            regPlatform = 3
+            clientIpStr = session.getHostAddress()
+        }, buildHeader(++session.lastClientSeq), GameSessionKcp.DISPATCH_KEY)
     }
 
     fun login(session: GameSession, req: PlayerLoginReq) {
         if (session.account.avatars.isEmpty()) {
 //            session.state = SessionState.PICKING_CHARACTER // Pick main character
             // Show opening cutscene if player has no avatars
-            session.send(BasePacket(null, opcode=PacketOpcodes.DoSetPlayerBornDataNotify))
+            session.send(doSetPlayerBornDataNotify {})
         } else {
             onLogin(session)
         }
 
         // Final packet to tell client logging in is done
-        session.send(PacketPlayerLoginRsp(), PacketTakeAchievementRewardReq())
+        session.send(playerLoginRsp {
+            isUseAbilityHash = true // true
+            abilityHashCode = 1844674 // 1844674
+            gameBiz = "hk4e_global"
+            clientDataVersion = regionCache.clientDataVersion
+            clientSilenceDataVersion = regionCache.clientSilenceDataVersion
+            clientMd5 = regionCache.clientDataMd5
+            clientSilenceMd5 = regionCache.clientSilenceDataMd5
+            resVersionConfig = regionCache.resVersionConfig
+            clientVersionSuffix = regionCache.clientVersionSuffix
+            clientSilenceVersionSuffix = regionCache.clientSilenceVersionSuffix
+            isScOpen = false //.setScInfo(ByteString.copyFrom(new byte[] {}))
+            registerCps = "mihoyo"
+            countryCode = "US"
+        }, buildHeader(1), GameSessionKcp.DISPATCH_KEY)
+        session.send(takeAchievementRewardReq {})
     }
 
     fun chooseMc(session: GameSession, req: SetPlayerBornDataReq) {
@@ -47,7 +80,7 @@ object AccountService {
 //        player.save() TODO
 
         onLogin(session)
-        session.send(BasePacket(null, opcode=PacketOpcodes.SetPlayerBornDataRsp))
+        session.send(setPlayerBornDataRsp {})
         // TODO welcome mail
     }
 
@@ -64,7 +97,18 @@ object AccountService {
 //        doDailyReset()
 
         // Packets
-        session.send(PacketPlayerDataNotify(session.account))
+        session.send(playerDataNotify {
+            nickName = session.account.nickname
+            isFirstLoginToday = true
+            regionId = session.account.regionId
+            propMap.putAll(session.account.properties.map { (key, value) ->
+                key.id to propValue {
+                    type = key.id
+                    ival = value
+                    this.value = value
+                }
+            }.toMap())
+        }, buildHeader(2))
         session.send(storeWeightLimitNotify {
             storeType = InventoryMessages.StoreType.PACK
             weightLimit = InventoryService.LIMIT_ALL
@@ -106,7 +150,7 @@ object AccountService {
                 teamName = session.account.teamNames[idx]
                 avatarGuidList.addAll(guids)
             } }.toMap())
-        }, BasePacket.buildHeader(2))
+        }, buildHeader(2))
         session.send(combineDataNotify { combineIdList.addAll(session.account.unlockedCombines) })
         ForgeQueueService.notify(session)
 //        resinManager.onPlayerLogin()
@@ -129,5 +173,13 @@ object AccountService {
 //        // register
 //        server.registerPlayer(this)
 //        profile.player = this // Set online
+    }
+
+    private val regionCache by lazy {
+        regionInfo {
+            gateserverIp = "127.0.0.1"
+            gateserverPort = 22102
+            secretKey = ByteString.copyFrom(GameSessionKcp.DISPATCH_SEED)
+        }
     }
 }

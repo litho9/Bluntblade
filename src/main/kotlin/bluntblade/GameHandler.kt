@@ -136,8 +136,21 @@ class Avatar(
     fun prop(stat: Stat, value: Float) { fightProperties[stat.id] = value }
 }
 
+data class SpawnDataEntry(val groupId: Int)
+enum class ChallengeStatus { ONGOING, FAILED, SUCCESS }
+data class WorldChallenge(
+    val id: Int,
+    val index: Int,
+    val triggers: List<ChallengeTrigger>,
+    var score: Int,
+    val goal: Int,
+    var status: ChallengeStatus = ChallengeStatus.ONGOING
+)
+abstract class ChallengeTrigger(val type: String) // "MONSTER"
+
 abstract class GameEntity(
     val id: Int,
+    val spawnEntry: SpawnDataEntry? = null,
     var lastMoveSceneTimeMs: Int = 0,
     val lastMoveReliableSeq: Int = 0
 ) {
@@ -177,7 +190,10 @@ class EntityAvatar(
 
 class Scene(
     val id: Int,
-    var time: Int
+    var time: Int,
+    val type: SceneType,
+    val challenge: WorldChallenge? = null,
+    val deadSpawnedEntities: MutableSet<SpawnDataEntry> = HashSet()
 ) {
 //    fun broadcastPacket(packetGadgetInteractRsp: PacketGadgetInteractRsp): PacketGadgetInteractRsp {
 //        return packetGadgetInteractRsp // TODO("Not yet implemented")

@@ -291,3 +291,8 @@ message GetAuthkeyRsp {
   uint32 authkey_ver = 10;
   string game_biz = 4;
 }
+
+// CmdId: 147
+// EnetChannelId: 0
+// EnetIsReliable: true
+message DoSetPlayerBornDataNotify {}

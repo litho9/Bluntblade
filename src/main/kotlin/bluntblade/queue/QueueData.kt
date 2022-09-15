@@ -13,7 +13,4 @@ data class ForgeData(
     @SerialName("forgeTime") val duration: Int,
     @SerialName("forgePoint") val points: Int = 1,
 )
-val forgeData: Map<Int, ForgeData> by lazy {
-    resource<List<ForgeData>>("./ExcelBinOutput/ForgeExcelConfigData.json")
-        .associateBy(ForgeData::id)
-}
+val forgeData by lazy { resource<List<ForgeData>>("data/Forge.json").associateBy(ForgeData::id) }

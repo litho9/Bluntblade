@@ -183,7 +183,7 @@ object SceneService {
         })
         session.send(sceneInitFinishRsp {
             enterSceneToken = session.enterSceneToken
-        }, BasePacket.buildHeader(11))
+        }, buildHeader(11))
     }
 
     fun enterReady(session: GameSession) {
@@ -195,7 +195,7 @@ object SceneService {
         })
         session.send(enterSceneReadyRsp {
             enterSceneToken = session.enterSceneToken
-        }, BasePacket.buildHeader(11))
+        }, buildHeader(11))
     }
 
     fun enterDone(session: GameSession) {
@@ -256,9 +256,7 @@ object SceneService {
 
     fun changeTime(session: GameSession, req: ChangeGameTimeReq) {
         session.scene.time = req.gameTime % 1440
-        session.send(changeGameTimeRsp {
-            curGameTime = session.scene.time
-        })
+        session.send(changeGameTimeRsp { curGameTime = session.scene.time })
     }
 
     fun pointGet(session: GameSession, req: GetScenePointReq) {
@@ -275,11 +273,8 @@ object SceneService {
         session.send(getSceneAreaRsp {
             sceneId = req.sceneId
             areaIdList.addAll(areaIds)
-            cityInfoList.addAll((1..3).map { cityInfo {
-                cityId = it
-                level = 1
-            } })
-        }, BasePacket.buildHeader(0))
+            cityInfoList.addAll((1..3).map { cityInfo { cityId = it; level = 1 } })
+        }, buildHeader(0))
     }
 
     fun gadgetCreated(session: GameSession, req: EvtCreateGadgetNotify) {
@@ -307,8 +302,64 @@ object SceneService {
         }
     }
 
+    fun drown(session: GameSession, req: SceneEntityDrownReq) {
+        val entity = session.scene.entities[req.entityId] ?: return // EntityMonster || EntityAvatar
+        if (entity is EntityMonster) entity.fightProps[Stat.CUR_HP] = 0f
+        if (entity is EntityAvatar) entity.avatar.fightProperties[Stat.CUR_HP.id] = 0f
+        // TODO: make a list somewhere of all entities to remove per tick rather than one by one
+        killEntity(session, entity)
+        session.broadcast(sceneEntityDrownRsp { entityId = req.entityId })
+    }
+
+    private fun killEntity(session: GameSession, target: GameEntity, attackerId: Int = 0) {
+        session.broadcast(lifeStateChangeNotify {
+            entityId = target.id
+            lifeState = AvatarService.LifeState.DEAD.value
+            sourceEntityId = attackerId
+        })
+        if (target is EntityMonster && session.scene.type != SceneType.SCENE_DUNGEON)
+            DropService.drop(session, target)
+
+        session.scene.entities.remove(target.id)
+        session.broadcast(sceneEntityDisappearNotify {
+            disappearType = VisionType.VISION_TYPE_DIE
+            entityList.add(target.id)
+        })
+
+        if (target is EntityMonster) onDeath(session, target, attackerId)
+    }
+
+    private fun onDeath(session: GameSession, entity: EntityMonster, killerId: Int) {
+        entity.spawnEntry?.let { session.scene.deadSpawnedEntities.add(it) }
+
+        val challenge = session.scene.challenge
+        challenge?.triggers?.filter { it.type == "MONSTER" }
+                ?.forEach { _ -> onMonsterDeath(session, challenge) }
+
+//        if (getScene().getScriptManager().isInit() && this.getGroupId() > 0) {
+//            if (getScene().getScriptManager().getScriptMonsterSpawnService() != null) {
+//                getScene().getScriptManager().getScriptMonsterSpawnService().onMonsterDead(this)
+//            }
+//            // prevent spawn monster after success
+//            if (getScene().getChallenge() == null || getScene().getChallenge() != null && getScene().getChallenge().inProgress())
+//                getScene().getScriptManager().callEvent(EventType.EVENT_ANY_MONSTER_DIE, ScriptArgs().setParam1(this.getConfigId()))
+//        }
+
+//        session.world?.players?.forEach {
+//            BattlePassService.trigger(it, WatcherTriggerType.TRIGGER_MONSTER_DIE, entity.monster.id, 1) }
+    }
+
+    private fun onMonsterDeath(session: GameSession, challenge: WorldChallenge) {
+        val newScore = ++challenge.score
+        session.broadcast(challengeDataNotify {
+            challengeIndex = challenge.index
+            paramIndex = 1
+            value = newScore
+        })
+        if (newScore >= challenge.goal) challenge.status = ChallengeStatus.SUCCESS
+    }
+
     // vehicleCreate
-    // drown
     // teleport
     // AI sync
     // sit down
@@ -320,4 +371,14 @@ object SceneService {
     private fun add(entity: EntityAvatar) {
         TODO("Not implemented yet")
     }
+}
+
+enum class SceneType(val value: Int) {
+    SCENE_NONE(0),
+    SCENE_WORLD(1),
+    SCENE_DUNGEON(2),
+    SCENE_ROOM(3),
+    SCENE_HOME_WORLD(4),
+    SCENE_HOME_ROOM(5),
+    SCENE_ACTIVITY(6);
 }
