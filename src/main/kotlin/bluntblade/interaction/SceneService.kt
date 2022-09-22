@@ -2,8 +2,11 @@ package bluntblade.interaction
 
 import bluntblade.*
 import bluntblade.game.ElementType
+import bluntblade.game.EnterReason
 import bluntblade.game.Stat
 import bluntblade.inventory.*
+import java.time.Instant
+import kotlin.random.Random
 
 fun prop(propertyId: Int, value: Long) = propValue {
     type = propertyId
@@ -121,8 +124,7 @@ object SceneService {
         session.send(sceneTeamUpdateNotify {
             isInMp = session.world!!.isMultiplayer
             session.world!!.players.forEach { p ->
-                val team = p.curTeam
-                val resonances = team.groupBy {
+                val resonances = p.curTeam.groupBy {
                     val skillDepot = avatarSkillDepotData[it.avatar.skillDepotId]!!
                     val burstData = avatarSkillData[skillDepot.burstId]!!
                     ElementType.valueOf(burstData.element)
@@ -131,7 +133,7 @@ object SceneService {
                     .ifEmpty { listOf("TeamResonance_AllDifferent") }
                 val resonanceIds = resonances.map { it.key.teamResonanceId }
                     .ifEmpty { listOf(10801) }
-                sceneTeamAvatarList.addAll(team.map { entity -> sceneTeamAvatar {
+                sceneTeamAvatarList.addAll(p.curTeam.map { entity -> sceneTeamAvatar {
                     playerUid = p.account.uid
                     avatarGuid = entity.avatar.guid
                     sceneId = p.scene.id
@@ -212,10 +214,9 @@ object SceneService {
             if (session.curAvatar.avatar.prop(Stat.CUR_HP) <= 0f)
                 session.curAvatar.avatar.prop(Stat.CUR_HP, 1f)
             add(session.curAvatar)
-            session.curTeam.filter { it.avatar.skillExtraCharges.isNotEmpty() }
+            session.curTeam.map { it.avatar.skillExtraCharges }.filter { it.isNotEmpty() }
                 .forEach { session.send(avatarSkillInfoNotify {
-                    skillMap.putAll(it.avatar.skillExtraCharges
-                        .mapValues { avatarSkillInfo { maxChargeCount = it.value } })
+                    skillMap.putAll(it.mapValues { avatarSkillInfo { maxChargeCount = it.value } })
                 }) }
         }
         val entities = session.scene.entities.filter { it.key != session.curAvatar.id }
@@ -350,26 +351,76 @@ object SceneService {
     }
 
     private fun onMonsterDeath(session: GameSession, challenge: WorldChallenge) {
-        val newScore = ++challenge.score
         session.broadcast(challengeDataNotify {
             challengeIndex = challenge.index
             paramIndex = 1
-            value = newScore
+            value = ++challenge.score
         })
-        if (newScore >= challenge.goal) challenge.status = ChallengeStatus.SUCCESS
+        if (challenge.score >= challenge.goal)
+            challenge.status = ChallengeStatus.SUCCESS
     }
 
     // vehicleCreate
-    // teleport
+//    fun teleport(session: GameSession)
+
+    fun personalSceneJump(session: GameSession, req: PersonalSceneJumpReq) {
+        val point = scenePointDataFor(session.scene.id)
+                .points[req.pointId.toString()] ?: return
+        val pos = point.tranPos
+        val sceneId: Int = point.tranSceneId
+
+//        player.getWorld().transferPlayerToScene(player, sceneId, pos)
+        val data = sceneData[sceneId]!!
+        val oldScene = session.scene
+        val oldPos = session.pos!!
+        // oldScene.removePlayer(player);
+        session.scene = Scene(sceneId, data.type) // TODO see if someone else is on the scene before creating
+        session.pos = pos
+        val enterType = /*if (dungeonData != null) EnterType.ENTER_TYPE_DUNGEON
+                else */ if (data.type == SceneType.SCENE_HOME_WORLD) EnterType.ENTER_TYPE_SELF_HOME
+                else if (oldScene.id == sceneId) EnterType.ENTER_TYPE_GOTO
+                else EnterType.ENTER_TYPE_JUMP
+        val enterReason = when (enterType) {
+            EnterType.ENTER_TYPE_DUNGEON -> EnterReason.DungeonEnter
+            EnterType.ENTER_TYPE_SELF_HOME -> EnterReason.EnterHome
+            else -> EnterReason.TransPoint
+        }
+        enterSceneNotify(session, sceneId, oldPos, enterType, enterReason)
+
+        session.send(personalSceneJumpRsp {
+            destSceneId = sceneId
+            destPos = vector { x = pos.x; y = pos.y; z = pos.z; } })
+    }
+
     // AI sync
     // sit down
     // stand up
-    // personal scene jump
     // enter pathfinding
     // set entity client data notify
 
     private fun add(entity: EntityAvatar) {
         TODO("Not implemented yet")
+    }
+
+    fun enterSceneNotify(session: GameSession, sceneId: Int, oldPos: Position, enterType: EnterType,
+            enterReason: EnterReason, target: Account = session.account) {
+        session.enterSceneToken = Random.nextInt(1000, 99999)
+        val newPos = session.pos!!
+        session.send(playerEnterSceneNotify {
+            this.sceneId = sceneId
+            prevPos = vector { x = oldPos.x; y = oldPos.y; z = oldPos.z; }
+            pos = vector { x = newPos.x; y = newPos.y; z = newPos.z; }
+            this.type = enterType
+            sceneBeginTime = System.currentTimeMillis()
+            targetUid = target.uid
+            enterSceneToken = session.enterSceneToken
+            worldLevel = target.worldLevel
+            this.enterReason = enterReason.value
+            worldType = 1
+            sceneTransaction = "$sceneId-${target.uid}-${Instant.now().epochSecond}-18402"
+            if (enterReason != EnterReason.Login)
+                sceneTagIdList.addAll(0..2999)
+        })
     }
 }
 

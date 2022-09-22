@@ -1167,3 +1167,50 @@ message ChallengeDataNotify {
   uint32 challenge_index = 2;
   uint32 param_index = 9;
 }
+
+// CmdId: 284
+message PersonalSceneJumpReq {
+  uint32 point_id = 4;
+}
+
+// CmdId: 280
+message PersonalSceneJumpRsp {
+  uint32 dest_scene_id = 5;
+  int32 retcode = 8;
+  Vector dest_pos = 11;
+}
+
+enum EnterType {
+  ENTER_TYPE_NONE = 0;
+  ENTER_TYPE_SELF = 1;
+  ENTER_TYPE_GOTO = 2;
+  ENTER_TYPE_JUMP = 3;
+  ENTER_TYPE_OTHER = 4;
+  ENTER_TYPE_BACK = 5;
+  ENTER_TYPE_DUNGEON = 6;
+  ENTER_TYPE_DUNGEON_REPLAY = 7;
+  ENTER_TYPE_GOTO_BY_PORTAL = 8;
+  ENTER_TYPE_SELF_HOME = 9;
+  ENTER_TYPE_OTHER_HOME = 10;
+  ENTER_TYPE_GOTO_RECREATE = 11;
+}
+
+// CmdId: 272
+message PlayerEnterSceneNotify {
+  uint32 prev_scene_id = 6;
+  uint32 dungeon_id = 12;
+  bool is_skip_ui = 1732;
+  uint32 scene_id = 15;
+  EnterType type = 13;
+  uint64 scene_begin_time = 14;
+  uint32 world_level = 11;
+  uint32 world_type = 1490;
+  uint32 target_uid = 4;
+  bool is_first_login_enter_scene = 3;
+  repeated uint32 scene_tag_id_list = 5;
+  string scene_transaction = 1842;
+  Vector prev_pos = 8;
+  uint32 enter_reason = 1828;
+  Vector pos = 7;
+  uint32 enter_scene_token = 2;
+}

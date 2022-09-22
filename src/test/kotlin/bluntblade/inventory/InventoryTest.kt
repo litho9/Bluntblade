@@ -8,14 +8,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
 class TestGameSession : GameSession() {
-    val packets = mutableListOf<BasePacket>()
-
-    override fun send(vararg packets: BasePacket) {
-        this.packets.addAll(packets)
-    }
+    val packets = mutableListOf<GeneratedMessageV3>()
 
     override fun send(data: GeneratedMessageV3?, header: ByteArray, encryption: ByteArray?, opcode: PacketOpcodes) {
-        this.packets.add(BasePacket(data, header, encryption, opcode))
+        this.packets.add(data!!)
     }
 }
 
@@ -71,7 +67,7 @@ internal class InventoryManagerTest {
             targetWeaponGuid = weapon.guid
             itemParamList.addAll(ores0.map { itemParam { itemId = it.id; count = it.count } })
         })
-        val leftovers = session.packets.last().data as CalcWeaponUpgradeReturnItemsRsp
+        val leftovers = session.packets.last() as CalcWeaponUpgradeReturnItemsRsp
         assertEquals(2, leftovers.itemParamListCount)
         assertEquals(2, leftovers.itemParamListList[0].count)
         assertEquals(4, leftovers.itemParamListList[1].count)

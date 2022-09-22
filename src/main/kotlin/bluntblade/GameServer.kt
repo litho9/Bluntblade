@@ -5,6 +5,7 @@ import com.google.protobuf.GeneratedMessageV3
 import bluntblade.game.ClimateType
 import bluntblade.game.PacketOpcodes
 import bluntblade.interaction.PlayerLocationInfo
+import bluntblade.interaction.Position
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.DefaultEventLoop
@@ -86,6 +87,7 @@ abstract class GameSession {
 
     var world: World? = null
     lateinit var scene: Scene
+    var pos: Position? = null
     var curTeamId: Int = 0
     val curTeam: List<EntityAvatar> = listOf()
     var curAvatarId = 0

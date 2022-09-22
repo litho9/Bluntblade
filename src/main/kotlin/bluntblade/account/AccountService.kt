@@ -6,6 +6,9 @@ import bluntblade.GameSessionKcp
 import bluntblade.account.AccountMessages.*
 import bluntblade.buildHeader
 import bluntblade.db
+import bluntblade.game.EnterReason
+import bluntblade.interaction.EnterType
+import bluntblade.interaction.SceneService
 import bluntblade.queue.ForgeQueueService
 import com.google.protobuf.ByteString
 import org.litote.kmongo.eq
@@ -162,7 +165,8 @@ object AccountService {
 //        // Home
 //        home = GameHome.getByUid(uid)
 //        home!!.onOwnerLogin(this)
-//        session.send(PacketPlayerEnterSceneNotify(this)) // Enter game world
+        SceneService.enterSceneNotify(session, 3, session.pos!!,
+                EnterType.ENTER_TYPE_SELF, EnterReason.Login) // Enter game world
 //        session.send(PacketPlayerLevelRewardUpdateNotify(rewardedLevels))
 //        session.send(PacketOpenStateUpdateNotify())
 //

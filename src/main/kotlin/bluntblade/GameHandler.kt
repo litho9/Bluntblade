@@ -190,8 +190,8 @@ class EntityAvatar(
 
 class Scene(
     val id: Int,
-    var time: Int,
     val type: SceneType,
+    var time: Int = 8 * 60,
     val challenge: WorldChallenge? = null,
     val deadSpawnedEntities: MutableSet<SpawnDataEntry> = HashSet()
 ) {
